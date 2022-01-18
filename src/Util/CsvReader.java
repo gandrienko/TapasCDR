@@ -23,8 +23,10 @@ public class CsvReader {
       rows.add(values);
     }
     br.close();
+    System.out.println(fname+": "+getNColumns()+" columns, "+getNRows()+" rows");
   }
   public int getNColumns() { return (columns==null) ? 0 : columns.length; }
+  public int getNRows() {return (rows==null) ? 0 : rows.size(); }
   public int getColumnN (String column) {
     if (columns==null)
       return -1;
