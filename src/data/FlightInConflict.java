@@ -7,6 +7,7 @@ package data;
 public class FlightInConflict {
   public static final int Climbing=1, Cruising=2, Descending=3;
   public static final String phaseStrings[]={"climbing","cruising","descending"};
+  public static final char phaseCodes[]={0,'\u2197','\u2192','\u2198'};
   /**
    * Main.csv: RTkey1, RTkey2
    */
@@ -57,6 +58,20 @@ public class FlightInConflict {
    * One of the numeric constants Climbing=1, Cruising=2, Descending=3;
    */
   public int phaseNum=0;
+  /**
+   * conflicts.csv: "sectorID"
+   * Sector at which the conflict has been detected
+   */
+  public String sectorId=null;
+  /**
+   * conflicts.csv: "projection_ID"
+   * This ID has the following form: TimePoint_RTkey_resolutionActionType_ResolutionActionValue
+   */
+  public String projectionId=null;
+  /**
+   * Points describing the fragment of the flight trajectory that is in conflict
+   */
+  public ConflictPoint closest=null, first=null, last=null, crossing=null;
   
   public static int getPhaseNum(String sValue) {
     for (int k=0; k<phaseStrings.length; k++)

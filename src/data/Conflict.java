@@ -84,7 +84,30 @@ public class Conflict {
   public String toString() {
     String str="Event id="+conflictId+"; type="+type+"; detection time="+detectionTime+"; isPrimary="+isPrimary;
     if (flights!=null)
-      str+="; flights "+flights[0].flightId+" + "+flights[1].flightId;
+      str+="; flights "+flights[0].flightId+FlightInConflict.phaseCodes[flights[0].phaseNum]+
+               " + "+flights[1].flightId+FlightInConflict.phaseCodes[flights[1].phaseNum];
     return str;
+  }
+  
+  /**
+   * A detected conflict is uniquely identified by these four fields
+   */
+  public boolean sameConflict(String conflictId,String actionId1,String actionId2,String commandCategory) {
+    if (!conflictId.equals(this.conflictId))
+      return false;
+    if (this.actionId1==null)
+      if (actionId1!=null)
+        return false;
+      else;
+    else
+      if (!this.actionId1.equals(actionId1))
+        return false;
+    if (this.actionId2==null)
+      return actionId2==null;
+    if (!this.actionId2.equals(actionId2))
+      return false;
+    if (this.commandCategory==null)
+      return commandCategory==null;
+    return this.commandCategory.equals(commandCategory);
   }
 }

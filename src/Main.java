@@ -20,6 +20,8 @@ public class Main {
         for (int i=0; i<conflicts.size(); i++)
           if (conflicts.get(i).isPrimary)
             System.out.println(conflicts.get(i));
+        int nOk=DataReader.getMoreConflictDataFromConflicts(csvConflicts,conflicts);
+        System.out.println("Successfully identified conflicts and flights for "+nOk+" records");
       }
       
       //System.out.println("Main.csv: "+csvMain.getNColumns()+" columns, "+csvMain.getNRows()+" rows");

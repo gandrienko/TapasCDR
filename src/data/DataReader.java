@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class DataReader {
   /**
-   * Here the order of the column names differs from the order in the file
+   * Here the order of the column names differs from the order in the files
    */
   public static String colNames_Main[]={
       "conflict_ID",  //0
@@ -27,6 +27,32 @@ public class DataReader {
       "lat1","lat2",          //21,22
       "alt1","alt2",          //23,24
       "flight_phase_1","flight_phase_2"};     //25,26
+  public static String colNames_Conflicts[]={
+      "conflict_ID",
+      "due_to_flight_1","due_to_flight_2","command_category",
+      "RTkey",
+      "time_to_conflict",
+      "time_to_first_conflict",
+      "time_to_last_conflict",
+      "t_to_crossing_point",
+      "conflict_lon","conflict_lat",
+      "first_conflict_lon","first_conflict_lat",
+      "last_conflict_lon","last_conflict_lat",
+      "crossing_point_lon","crossing_point_lat",
+      "conflict_alt",
+      "first_conflict_alt",
+      "last_conflict_alt",
+      "h_distance_at_conflict",
+      "h_distance_at_first_conflict",
+      "h_distance_at_last_conflict",
+      "d_h_cp",
+      "v_distance_at_conflict",
+      "v_distance_at_first_conflict",
+      "v_distance_at_last_conflict",
+      "d_v_cp",
+      "sectorID",
+      "projection_ID"
+  };
   
   public static ArrayList<Conflict> getConflictsFromMain(CsvReader data) {
     if (data==null || data.columns==null || data.rows==null || data.rows.isEmpty())
@@ -102,5 +128,46 @@ public class DataReader {
     if (conflicts.isEmpty())
       return null;
     return conflicts;
+  }
+  
+  /**
+   * @return the number of records that were successfully processed
+   */
+  public static int getMoreConflictDataFromConflicts(CsvReader data, ArrayList<Conflict> conflicts){
+    if (data==null || data.columns==null || data.rows==null || data.rows.isEmpty())
+      return 0;
+    if (conflicts==null || conflicts.isEmpty())
+      return 0;
+    int cNums[]=new int[colNames_Conflicts.length];
+    for (int i=0; i<cNums.length; i++) {
+      cNums[i] = -1;
+      for (int j = 0; j < data.columns.length && cNums[i]<0; j++)
+        if (data.columns[j].equalsIgnoreCase(colNames_Conflicts[i]))
+          cNums[i]=j;
+      if (cNums[i]<0 && i<6)
+        return 0; //necessary fields are missing
+    }
+    
+    int nOk=0;
+    
+    for (int i=0; i<data.getNRows(); i++) {
+      String conflictId=data.getValue(i,cNums[0]),
+          actionId1=data.getValue(i,cNums[1]), actionId2=data.getValue(i,cNums[2]),
+          commandCategory=data.getValue(i,cNums[3]), flightId=data.getValue(i,cNums[4]);
+      Conflict c=null;
+      for (int j=0; j<conflicts.size() && c==null; j++)
+        if (conflicts.get(j).sameConflict(conflictId,actionId1,actionId2,commandCategory))
+          c=conflicts.get(j);
+      if (c==null || c.flights==null)
+        continue;
+      FlightInConflict f=null;
+      for (int j=0; j<c.flights.length && f==null; j++)
+        if (c.flights[j].flightId.equals(flightId))
+          f=c.flights[j];
+      if (f==null)
+        continue;
+      ++nOk;
+    }
+    return nOk;
   }
 }
