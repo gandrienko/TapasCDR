@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 
 public class Conflict {
   public static final int type_Conflict=1, type_Alert=2, type_LoS=3;
+  public static final String typeStrings[]={"Conflict", "Alert", "loss"};
   /**
    * Main.csv: conflict_ID
    * This ID has the following form: TimePoint_FlightID1_FlightID2
@@ -72,4 +73,18 @@ public class Conflict {
    * “issued”: the resolution action was issued in the previous timestep
    */
   public String commandCategory=null;
+  
+  public static int getTypeNum(String sValue) {
+    for (int k=0; k<typeStrings.length; k++)
+      if (sValue.equalsIgnoreCase(typeStrings[k]))
+        return k+1;
+    return 0;
+  }
+  
+  public String toString() {
+    String str="Event id="+conflictId+"; type="+type+"; detection time="+detectionTime+"; isPrimary="+isPrimary;
+    if (flights!=null)
+      str+="; flights "+flights[0].flightId+" + "+flights[1].flightId;
+    return str;
+  }
 }

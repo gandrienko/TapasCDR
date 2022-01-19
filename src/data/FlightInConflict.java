@@ -6,10 +6,17 @@ package data;
 
 public class FlightInConflict {
   public static final int Climbing=1, Cruising=2, Descending=3;
+  public static final String phaseStrings[]={"climbing","cruising","descending"};
   /**
    * Main.csv: RTkey1, RTkey2
    */
   public String flightId=null;
+  /**
+   * Main.csv: "fp_projection_flag1","fp_projection_flag2"
+   * Whether the projection (prediction of the flight positions into the future)
+   * was obtained using some version of the flight plan.
+   */
+  public boolean projectedByPlan=true;
   /**
    * Main.csv: fp_id1, fp_id2
    * Flight plan Id: there may be multiple versions of the flight plan for one flight.
@@ -50,4 +57,11 @@ public class FlightInConflict {
    * One of the numeric constants Climbing=1, Cruising=2, Descending=3;
    */
   public int phaseNum=0;
+  
+  public static int getPhaseNum(String sValue) {
+    for (int k=0; k<phaseStrings.length; k++)
+      if (sValue.equalsIgnoreCase(phaseStrings[k]))
+        return k+1;
+    return 0;
+  }
 }

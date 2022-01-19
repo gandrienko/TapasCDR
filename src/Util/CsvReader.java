@@ -36,12 +36,30 @@ public class CsvReader {
     return -1;
   }
   public String getValue (int row, int columnN) {
-    return rows.get(row)[columnN].trim();
+    String values[]=rows.get(row);
+    String v=null;
+    if (values!=null && columnN<values.length)
+      v=values[columnN];
+    if (v!=null)
+      v=v.trim();
+    return v;
   }
   public double getValueAsDouble (int row, int columnN) {
-    return Double.valueOf(getValue(row,columnN)).doubleValue();
+    String v=getValue(row,columnN);
+    if (v!=null)
+      return Double.parseDouble(v);
+    return Double.NaN;
   }
   public double getValueAsInt (int row, int columnN) {
-    return Integer.valueOf(getValue(row,columnN)).intValue();
+    String v=getValue(row,columnN);
+    if (v!=null)
+      return Integer.parseInt(v);
+    return 0;
+  }
+  public long getValueAsLong(int row, int columnN) {
+    String v=getValue(row,columnN);
+    if (v!=null)
+      return Long.parseLong(v);
+    return 0;
   }
 }
