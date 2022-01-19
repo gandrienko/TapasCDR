@@ -1,11 +1,11 @@
 package Util;
 
 import java.io.*;
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class CsvReader {
-  String columns[]=null;
-  Vector<String[]> rows=null;
+  public String columns[]=null;
+  public ArrayList<String[]> rows=null;
   public CsvReader (String path, String fname) {
     try {
       read(path+"\\"+fname);
@@ -17,7 +17,7 @@ public class CsvReader {
     BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fname))));
     String strLine=br.readLine();
     columns=strLine.split(",");
-    rows=new Vector<>(100,100);
+    rows=new ArrayList<String[]>(200);
     while ((strLine = br.readLine()) != null) {
       String values[]=strLine.split(",");
       rows.add(values);
@@ -36,7 +36,7 @@ public class CsvReader {
     return -1;
   }
   public String getValue (int row, int columnN) {
-    return rows.elementAt(row)[columnN].trim();
+    return rows.get(row)[columnN].trim();
   }
   public double getValueAsDouble (int row, int columnN) {
     return Double.valueOf(getValue(row,columnN)).doubleValue();
