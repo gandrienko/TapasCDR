@@ -13,6 +13,7 @@ public class ConflictPoint {
    * last point (where the conflict ends), or crossing point
    */
   public static final String kinds_of_points[]={"CPA","first","last","crossing"};
+  public static final int kindCPA=0, kindFirst=1, kindLast=2, kindCross=3;
   /**
    * conflicts.csv: RTkey
    * Radar Track key (flight identifier)
@@ -47,5 +48,27 @@ public class ConflictPoint {
    * point altitude, in feet
    */
   public int altitude=0;
+  /**
+   * conflicts.csv: "h_distance_at_conflict",
+   *       "h_distance_at_first_conflict",
+   *       "h_distance_at_last_conflict",
+   *       "d_h_cp"
+   * Horizontal distance, in metres
+   */
+  public double hDistance=Double.NaN;
+  /**
+   * conflicts.csv: "v_distance_at_conflict",
+   *       "v_distance_at_first_conflict",
+   *       "v_distance_at_last_conflict",
+   *       "d_v_cp"
+   *  Vertical distance, in feet
+   */
+  public int vDistance=0;
   
+  public ConflictPoint() {}
+  
+  public ConflictPoint(String flightId, int kind) {
+    this.flightId=flightId;
+    this.kind=kind;
+  }
 }

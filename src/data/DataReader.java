@@ -167,6 +167,67 @@ public class DataReader {
       if (f==null)
         continue;
       ++nOk;
+      for (int j=5; j<cNums.length; j++) {
+        String sValue=data.getValue(i,cNums[j]);
+        if (sValue==null)
+          continue;
+        
+        String colName=data.columns[cNums[j]].toLowerCase();
+        if (colName.equals("sectorid"))
+          f.sectorId=sValue;
+        else
+        if (colName.equals("projection_id"))
+          f.projectionId=sValue;
+        else {
+          ConflictPoint cp=null;
+          if (colName.contains("first")) {
+            if (f.first==null)
+              f.first=new ConflictPoint(flightId,ConflictPoint.kindFirst);
+            cp=f.first;
+          }
+          else
+          if (colName.contains("last")) {
+            if (f.last==null)
+              f.last=new ConflictPoint(flightId,ConflictPoint.kindLast);
+            cp=f.last;
+          }
+          else
+          if (colName.contains("crossing") || colName.endsWith("_cp"))  {
+            if (f.crossing==null)
+              f.crossing=new ConflictPoint(flightId,ConflictPoint.kindCross);
+            cp=f.crossing;
+          }
+          else
+          if (colName.contains("conflict")) {
+            if (f.closest==null)
+              f.closest=new ConflictPoint(flightId,ConflictPoint.kindCPA);
+            cp=f.closest;
+          }
+          if (cp==null) //uninterpreted field name
+            continue;
+          
+          if (colName.startsWith("time_to_") || colName.startsWith("t_to_")) {
+            cp.timeTo=Double.parseDouble(sValue);
+            long timeUnix=c.detectionTimeUnix+Math.round(cp.timeTo);
+            cp.time=LocalDateTime.ofEpochSecond(timeUnix,0, ZoneOffset.UTC);
+          }
+          else
+          if (colName.endsWith("_lon"))
+            cp.lon=Double.parseDouble(sValue);
+          else
+          if (colName.endsWith("_lat"))
+            cp.lat=Double.parseDouble(sValue);
+          else
+          if (colName.endsWith("_alt"))
+            cp.altitude=Math.round(Float.parseFloat(sValue));
+          else
+          if (colName.startsWith("h_distance_") || colName.startsWith("d_h_"))
+            cp.hDistance=Double.parseDouble(sValue);
+          else
+          if (colName.startsWith("v_distance_") || colName.startsWith("d_v_"))
+            cp.vDistance=Math.round(Float.parseFloat(sValue));
+        }
+      }
     }
     return nOk;
   }
