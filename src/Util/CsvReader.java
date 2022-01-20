@@ -40,8 +40,11 @@ public class CsvReader {
     String v=null;
     if (values!=null && columnN<values.length)
       v=values[columnN];
-    if (v!=null)
-      v=v.trim();
+    if (v!=null) {
+      v = v.trim();
+      if (v.length() < 1)
+        return null;
+    }
     return v;
   }
   public double getValueAsDouble (int row, int columnN) {
