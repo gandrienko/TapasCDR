@@ -1,6 +1,7 @@
 import Util.CsvReader;
 import data.Conflict;
 import data.DataReader;
+import ui.ShowConflicts;
 
 import java.util.ArrayList;
 
@@ -14,17 +15,21 @@ public class Main {
                 csvConflicts=new CsvReader(path,"conflicts.csv");
   
       ArrayList<Conflict> conflicts=DataReader.getConflictsFromMain(csvMain);
-      if (conflicts!=null) {
-        System.out.println("Got data about " + conflicts.size() + " conflicts");
-        System.out.println("Primary conflicts:");
-        for (int i=0; i<conflicts.size(); i++)
-          if (conflicts.get(i).isPrimary)
-            System.out.println(conflicts.get(i));
-        int nOk=DataReader.getMoreConflictDataFromConflicts(csvConflicts,conflicts);
-        System.out.println("Successfully identified conflicts and flights for "+nOk+" records");
+      if (conflicts==null) {
+        System.out.println("Failed to get conflict data!");
+        return;
       }
-      
-      //System.out.println("Main.csv: "+csvMain.getNColumns()+" columns, "+csvMain.getNRows()+" rows");
+      System.out.println("Got data about " + conflicts.size() + " conflicts");
+      System.out.println("Primary conflicts:");
+      for (int i=0; i<conflicts.size(); i++)
+        if (conflicts.get(i).isPrimary)
+          System.out.println(conflicts.get(i));
+      int nOk=DataReader.getMoreConflictDataFromConflicts(csvConflicts,conflicts);
+      System.out.println("Successfully identified conflicts and flights for "+nOk+" records");
+  
+      ShowConflicts showConflicts=new ShowConflicts();
+      showConflicts.setConflicts(conflicts);
     }
+      
   }
 }

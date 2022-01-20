@@ -1,6 +1,7 @@
 package data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 /**
  * Describes a single conflict event between two aircraft flights.
@@ -109,5 +110,43 @@ public class Conflict {
     if (this.commandCategory==null)
       return commandCategory==null;
     return this.commandCategory.equals(commandCategory);
+  }
+  
+  public static double getMaxHorDistance(ArrayList<Conflict> conflicts) {
+    if (conflicts==null || conflicts.isEmpty())
+      return 0;
+    double maxD=0;
+    for (Conflict c:conflicts) 
+      if (c.flights!=null)
+        for (FlightInConflict f:c.flights) {
+          if (f.closest != null && f.closest.hDistance > maxD)
+            maxD = f.closest.hDistance;
+          if (f.first != null && f.first.hDistance > maxD)
+            maxD = f.first.hDistance;
+          if (f.last != null && f.last.hDistance > maxD)
+            maxD = f.last.hDistance;
+          if (f.crossing != null && f.crossing.hDistance > maxD)
+            maxD = f.crossing.hDistance;
+        }
+    return maxD;    
+  }
+  
+  public static int getMaxVertDistance(ArrayList<Conflict> conflicts) {
+    if (conflicts==null || conflicts.isEmpty())
+      return 0;
+    int maxD=0;
+    for (Conflict c:conflicts)
+      if (c.flights!=null)
+        for (FlightInConflict f:c.flights) {
+          if (f.closest != null && f.closest.vDistance > maxD)
+            maxD = f.closest.vDistance;
+          if (f.first != null && f.first.vDistance > maxD)
+            maxD = f.first.vDistance;
+          if (f.last != null && f.last.vDistance > maxD)
+            maxD = f.last.vDistance;
+          if (f.crossing != null && f.crossing.vDistance > maxD)
+            maxD = f.crossing.vDistance;
+        }
+    return maxD;
   }
 }
