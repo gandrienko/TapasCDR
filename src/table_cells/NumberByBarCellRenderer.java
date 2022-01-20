@@ -9,7 +9,7 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
   public int precision=-1;
   
   public NumberByBarCellRenderer(double min, double max) {
-    super("", Label.RIGHT);
+    super("", JLabel.RIGHT);
     this.min=min;
     this.max=max;
     setHorizontalAlignment(SwingConstants.RIGHT);
@@ -20,7 +20,7 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
     this.precision = precision;
   }
   
-  public void paint (Graphics g) {
+  public void paintComponent (Graphics g) {
     g.setColor(getBackground());
     g.fillRect(0,0,getWidth(),getHeight());
     if (min<max && !Double.isNaN(value)) {
@@ -43,7 +43,7 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
           }
         }
     }
-    super.paint(g);
+    super.paintComponent(g);
   }
   public Component getTableCellRendererComponent(JTable table,
                                                  Object value,

@@ -112,6 +112,21 @@ public class Conflict {
     return this.commandCategory.equals(commandCategory);
   }
   
+  /**
+   * Whether the given conflict involves the same flights as this conflict
+   */
+  public boolean sameFlights(Conflict c) {
+    if (c==null)
+      return false;
+    if (flights==null || c.flights==null || this.flights.length!=c.flights.length)
+      return false;
+    if (flights[0].flightId.equals(c.flights[0].flightId))
+      return flights[1].flightId.equals(c.flights[1].flightId);
+    if (flights[0].flightId.equals(c.flights[1].flightId))
+      return flights[1].flightId.equals(c.flights[0].flightId);
+    return false;
+  }
+  
   public static double getMaxHorDistance(ArrayList<Conflict> conflicts) {
     if (conflicts==null || conflicts.isEmpty())
       return 0;

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class ConflictTableModel  extends AbstractTableModel {
   public static final String colNames[]={"N","Type","Flight 1","Flight 2",
-      "Start time","CPA time","End time",
+      "Detected at","Start time","CPA time","End time",
       "HorD at start","HorD at CPA","HorD at end",
       "VertD at start","VertD at CPA","VertD at end",
       "Is primary?"
@@ -31,7 +31,7 @@ public class ConflictTableModel  extends AbstractTableModel {
   public Class getColumnClass(int c) {
     if (c==0 || colNames[c].contains("Vert"))
       return Integer.class;
-    if (colNames[c].contains("time"))
+    if (colNames[c].contains("time") || colNames[c].startsWith("Detect"))
       return LocalDateTime.class;
     if (colNames[c].contains("Hor"))
       return Double.class;
@@ -55,6 +55,8 @@ public class ConflictTableModel  extends AbstractTableModel {
       return c.type;
     if (colNames[col].equals("Is primary?"))
       return c.isPrimary;
+    if (colNames[col].startsWith("Detect"))
+      return c.detectionTime;
     if (colNames[col].equals("Flight 1"))
       return c.flights[0].flightId+" "+FlightInConflict.phaseCodes[c.flights[0].phaseNum];
     if (colNames[col].equals("Flight 2"))
@@ -75,7 +77,9 @@ public class ConflictTableModel  extends AbstractTableModel {
   }
   
   public int getPreferredColumnWidth(int col) {
-    if (col>0 && !getColumnClass(col).equals(String.class) && !getColumnClass(col).equals(Boolean.class))
+    if (col>0 && !colNames[col].contains("time") &&
+            !getColumnClass(col).equals(String.class) &&
+            !getColumnClass(col).equals(Boolean.class))
       return 0;
     JLabel label=new JLabel(colNames[col]);
     if (colNames[col].equals("N"))
@@ -86,6 +90,9 @@ public class ConflictTableModel  extends AbstractTableModel {
     else
     if (colNames[col].startsWith("Flight"))
       label.setText("000000000");
+    else
+      if (colNames[col].contains("time") || colNames[col].startsWith("Detect"))
+        label.setText("00:00:00");
     return label.getPreferredSize().width+10;
   }
   
