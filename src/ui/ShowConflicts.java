@@ -4,6 +4,7 @@ import data.Conflict;
 import table_cells.NumberByBarCellRenderer;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -47,6 +48,8 @@ public class ShowConflicts {
     cTableModel.setConflicts(conflicts);
     if (cTable==null) {
       cTable = new JTable(cTableModel);
+      DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+      centerRenderer.setHorizontalAlignment(JLabel.CENTER);
       for (int i=0; i<cTableModel.getColumnCount(); i++) {
         String cName=cTableModel.getColumnName(i);
         if (cName.startsWith("Hor") || cName.startsWith("Vert")) {
@@ -56,6 +59,9 @@ public class ShowConflicts {
           bRend.setPrecision(0);
           cTable.getColumnModel().getColumn(i).setCellRenderer(bRend);
         }
+        else
+        if (cTableModel.getColumnClass(i).equals(String.class))
+          cTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         int w=cTableModel.getPreferredColumnWidth(i);
         if (w>0)
           cTable.getColumnModel().getColumn(i).setPreferredWidth(w);
@@ -63,7 +69,7 @@ public class ShowConflicts {
       
       Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
   
-      cTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.7f), Math.round(size.height * 0.6f)));
+      cTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.6f), Math.round(size.height * 0.6f)));
       cTable.setFillsViewportHeight(true);
       cTable.setAutoCreateRowSorter(true);
       cTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

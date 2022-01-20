@@ -4,6 +4,7 @@ import data.Conflict;
 import data.ConflictPoint;
 import data.FlightInConflict;
 
+import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.awt.*;
 import java.time.LocalDateTime;
@@ -74,15 +75,18 @@ public class ConflictTableModel  extends AbstractTableModel {
   }
   
   public int getPreferredColumnWidth(int col) {
+    if (col>0 && !getColumnClass(col).equals(String.class) && !getColumnClass(col).equals(Boolean.class))
+      return 0;
+    JLabel label=new JLabel(colNames[col]);
     if (colNames[col].equals("N"))
-      return 20;
+      label.setText("000");
+    else
     if (colNames[col].equals("Type"))
-      return 30;
-    if (colNames[col].equals("Is primary?"))
-      return 25;
+      label.setText("conflict");
+    else
     if (colNames[col].startsWith("Flight"))
-      return 50;
-    return 0;
+      label.setText("000000000");
+    return label.getPreferredSize().width+10;
   }
   
 }
