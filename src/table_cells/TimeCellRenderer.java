@@ -5,25 +5,29 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.time.LocalDateTime;
 
-public class TimeCellRenderer implements TableCellRenderer {
-  public JLabel label=null;
+public class TimeCellRenderer extends JLabel implements TableCellRenderer {
   public TimeCellRenderer () {
-    label=new JLabel("",JLabel.RIGHT);
+    super("",JLabel.RIGHT);
   }
   public Component getTableCellRendererComponent(JTable table,
                                                  Object value,
                                                  boolean isSelected,
                                                  boolean hasFocus,
                                                  int row, int column) {
-    label.setText("");
+    setText("");
     if (value!=null && (value instanceof LocalDateTime)) {
       LocalDateTime dt=(LocalDateTime)value;
-      label.setText(String.format("%02d:%02d:%02d",dt.getHour(),dt.getMinute(),dt.getSecond()));
+      setText(String.format("%02d:%02d:%02d",dt.getHour(),dt.getMinute(),dt.getSecond()));
     }
     if (isSelected)
-      label.setBackground(table.getSelectionBackground());
+      setBackground(table.getSelectionBackground());
     else
-      label.setBackground(table.getBackground());
-    return label;
+      setBackground(table.getBackground());
+    return this;
+  }
+  public void paintComponent (Graphics g) {
+    g.setColor(getBackground());
+    g.fillRect(0, 0, getWidth(), getHeight());
+    super.paintComponent(g);
   }
 }
