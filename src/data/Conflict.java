@@ -127,6 +127,31 @@ public class Conflict {
     return false;
   }
   
+  /**
+   * @return 4 coordinates: min longitude, min latitude, max longitude, max latitude
+   */
+  public double[] getGeoBoundaries(){
+    if (flights==null || flights[0]==null)
+      return null;
+    double xMin=flights[0].lon, xMax=xMin, yMin=flights[0].lat, yMax=yMin;
+    for (int i=0; i<flights.length; i++) {
+      FlightInConflict f=flights[i];
+      if (i>0) {
+        if (xMin>f.lon) xMin=f.lon; else if (xMax<f.lon) xMax=f.lon;
+        if (yMin>f.lat) yMin=f.lat; else if (yMax<f.lat) yMax=f.lat;
+      }
+      for (int j=0; j<4; j++) {
+        ConflictPoint cp=(j==0)?f.first:(j==1)?f.closest:(j==2)?f.last:f.crossing;
+        if (cp==null)
+          continue;
+        if (xMin>cp.lon) xMin=cp.lon; else if (xMax<cp.lon) xMax=cp.lon;
+        if (yMin>cp.lat) yMin=cp.lat; else if (yMax<cp.lat) yMax=cp.lat;
+      }
+    }
+    double minmax[]={xMin,yMin,xMax,yMax};
+    return minmax;
+  }
+  
   public static double getMaxHorDistance(ArrayList<Conflict> conflicts) {
     if (conflicts==null || conflicts.isEmpty())
       return 0;

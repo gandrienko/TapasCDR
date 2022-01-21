@@ -1,14 +1,14 @@
 package ui;
 
 import data.Conflict;
+import map.MapView;
 import table_cells.NumberByBarCellRenderer;
 import table_cells.TimeCellRenderer;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -23,8 +23,11 @@ public class ShowConflicts {
   public ArrayList<Conflict> conflicts1=null, conflicts2;
   
   public ConflictTableModel cTableModel=null;
+  
+  public MapView mapView=null;
+  
   public JTable cTable=null;
-  public JFrame mainFrame=null;
+  public JFrame mainFrame=null, mapFrame=null;
   
   public ArrayList<Conflict> getConflicts() {
     return conflicts;
@@ -90,6 +93,20 @@ public class ShowConflicts {
         if (w>0)
           cTable.getColumnModel().getColumn(i).setPreferredWidth(w);
       }
+  
+      
+      cTable.addMouseListener(new MouseAdapter() {
+        public void mousePressed(MouseEvent e) {
+          super.mousePressed(e);
+          if (e.getButton()==MouseEvent.BUTTON1) {
+            int rowIndex=cTable.rowAtPoint(e.getPoint());
+            if (rowIndex<0)
+              return;
+            int realRowIndex = cTable.convertRowIndexToModel(rowIndex);
+            showConflictGeometry(conflicts1.get(realRowIndex));
+          }
+        }
+      });
       
       Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
   
@@ -119,6 +136,23 @@ public class ShowConflicts {
         }
       });
     }
+  }
+  
+  public void showConflictGeometry(Conflict conflict) {
+    if (mapView==null) {
+      mapView=new MapView();
+      Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
+      mapView.setPreferredSize(new Dimension(size.width/3,size.height/3));
+      mapFrame=new JFrame("Conflict geometry");
+      mapFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+      mapFrame.getContentPane().add(mapView, BorderLayout.CENTER);
+      //Display the window.
+      mapFrame.pack();
+      mapFrame.setLocation(size.width/2, size.height/2);
+      mapFrame.setVisible(true);
+    }
+    mapFrame.setTitle("Conflict of flights "+conflict.flights[0].flightId+" and "+conflict.flights[1].flightId);
+    mapView.setConflict(conflict);
   }
   
 }
