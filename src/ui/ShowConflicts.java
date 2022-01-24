@@ -1,6 +1,7 @@
 package ui;
 
 import data.Conflict;
+import map.AltiView;
 import map.MapView;
 import table_cells.NumberByBarCellRenderer;
 import table_cells.TimeCellRenderer;
@@ -25,9 +26,10 @@ public class ShowConflicts {
   public ConflictTableModel cTableModel=null;
   
   public MapView mapView=null;
+  public AltiView altiView=null;
   
   public JTable cTable=null;
-  public JFrame mainFrame=null, mapFrame=null;
+  public JFrame mainFrame=null, mapFrame=null, altiFrame=null;
   
   public ArrayList<Conflict> getConflicts() {
     return conflicts;
@@ -142,17 +144,31 @@ public class ShowConflicts {
     if (mapView==null) {
       mapView=new MapView();
       Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
-      mapView.setPreferredSize(new Dimension(size.width/3,size.height/3));
+      mapView.setPreferredSize(new Dimension(size.height/3,size.height/3));
       mapFrame=new JFrame("Conflict geometry");
       mapFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
       mapFrame.getContentPane().add(mapView, BorderLayout.CENTER);
       //Display the window.
       mapFrame.pack();
-      mapFrame.setLocation(size.width/2, size.height/2);
+      mapFrame.setLocation(size.width/5, size.height/5);
       mapFrame.setVisible(true);
     }
     mapFrame.setTitle("Conflict of flights "+conflict.flights[0].flightId+" and "+conflict.flights[1].flightId);
     mapView.setConflict(conflict);
+    if (altiView==null) {
+      altiView=new AltiView();
+      Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
+      altiView.setPreferredSize(new Dimension(size.width/3,size.height/4));
+      altiFrame=new JFrame("Conflict altitudes");
+      altiFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+      altiFrame.getContentPane().add(altiView, BorderLayout.CENTER);
+      //Display the window.
+      altiFrame.pack();
+      altiFrame.setLocation(mapFrame.getX()+mapFrame.getWidth(), mapFrame.getY());
+      altiFrame.setVisible(true);
+    }
+    altiFrame.setTitle("Altitudes of flights "+conflict.flights[0].flightId+" and "+conflict.flights[1].flightId);
+    altiView.setConflict(conflict);
   }
   
 }

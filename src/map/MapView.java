@@ -9,7 +9,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class MapView extends JPanel {
-  public static final Color textColor=new Color(0,0,0,90);
+  public static final Color colorF1=new Color(128,0,0), colorF2=new Color(0,0,128),
+      textColorF1=new Color(96,0,0,128), textColorF2=new Color(0,0,96,128);
   public static final Stroke stroke2=new BasicStroke(2);
   public static final float dash[] = {2.0f,2.0f};
   public static Stroke dashedStroke = new BasicStroke(1.0f,BasicStroke.CAP_BUTT,
@@ -84,12 +85,12 @@ public class MapView extends JPanel {
     FlightInConflict f1=conflict.flights[0], f2=conflict.flights[1];
     int x01=metrics.scrX(f1.lon), y01=metrics.scrY(f1.lat),
         x02=metrics.scrX(f2.lon), y02=metrics.scrY(f2.lat);
-    g.setColor(Color.darkGray);
+    g.setColor(colorF1);
     g.fillRect(x01-2,y01-2,5,5);
+    g.setColor(colorF2);
     g.fillRect(x02-2,y02-2,5,5);
     
     FontMetrics fm=g.getFontMetrics();
-    g.setColor(textColor);
     int sw1=fm.stringWidth(f1.flightId), sw2=fm.stringWidth(f2.flightId);
     int tx1=x01-sw1/2, ty1=y01-3;
     if (tx1<1) tx1=1; else if (tx1+sw1>=w) tx1=w-sw1-1;
@@ -97,7 +98,9 @@ public class MapView extends JPanel {
     int tx2=x02-sw2/2, ty2=y02-3;
     if (tx2<1) tx2=1; else if (tx2+sw2>=w) tx2=w-sw2-1;
     if (ty2-fm.getAscent()<1) ty2=1+fm.getAscent(); else if (ty2>=h) ty2=h-1;
+    g.setColor(textColorF1);
     g.drawString(f1.flightId,tx1,ty1);
+    g.setColor(textColorF2);
     g.drawString(f2.flightId,tx2,ty2);
     
     for (int j=0; j<3; j++) {
@@ -108,10 +111,11 @@ public class MapView extends JPanel {
       int x1=metrics.scrX(cp1.lon), y1=metrics.scrY(cp1.lat),
           x2=metrics.scrX(cp2.lon), y2=metrics.scrY(cp2.lat);
       g.setStroke(stroke2);
-      g.setColor(Color.darkGray);
+      g.setColor(colorF1);
       g.drawLine(x01,y01,x1,y1);
+      g.setColor(colorF2);
       g.drawLine(x02,y02,x2,y2);
-      Color color=(j==0)?Color.orange:(j==1)?Color.red:Color.green.darker();
+      Color color=(j==0)?Color.orange.darker():(j==1)?Color.red:Color.green.darker();
       g.setColor(color);
       g.drawLine(x1-3,y1-3,x1+3,y1+3);
       g.drawLine(x1-3,y1+3,x1+3,y1-3);
