@@ -24,12 +24,13 @@ public class ShowConflicts {
   public ArrayList<Conflict> conflicts1=null, conflicts2;
   
   public ConflictTableModel cTableModel=null;
+  public ActionsTableModel aTableModel =null;
   
   public MapView mapView=null;
   public AltiView altiView=null;
   
-  public JTable cTable=null;
-  public JFrame mainFrame=null, mapFrame=null, altiFrame=null;
+  public JTable cTable=null, aTable=null;
+  public JFrame mainFrame=null, mapFrame=null;
   
   public ArrayList<Conflict> getConflicts() {
     return conflicts;
@@ -141,34 +142,56 @@ public class ShowConflicts {
   }
   
   public void showConflictGeometry(Conflict conflict) {
+    Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
     if (mapView==null) {
       mapView=new MapView();
-      Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
       mapView.setPreferredSize(new Dimension(size.height/3,size.height/3));
-      mapFrame=new JFrame("Conflict geometry");
-      mapFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-      mapFrame.getContentPane().add(mapView, BorderLayout.CENTER);
-      //Display the window.
-      mapFrame.pack();
-      mapFrame.setLocation(size.width/5, size.height/5);
-      mapFrame.setVisible(true);
     }
-    mapFrame.setTitle("Conflict of flights "+conflict.flights[0].flightId+" and "+conflict.flights[1].flightId);
-    mapView.setConflict(conflict);
     if (altiView==null) {
       altiView=new AltiView();
-      Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
       altiView.setPreferredSize(new Dimension(size.width/3,size.height/4));
-      altiFrame=new JFrame("Conflict altitudes");
-      altiFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-      altiFrame.getContentPane().add(altiView, BorderLayout.CENTER);
-      //Display the window.
-      altiFrame.pack();
-      altiFrame.setLocation(mapFrame.getX()+mapFrame.getWidth(), mapFrame.getY());
-      altiFrame.setVisible(true);
     }
-    altiFrame.setTitle("Altitudes of flights "+conflict.flights[0].flightId+" and "+conflict.flights[1].flightId);
+    if (aTable==null) {
+      aTableModel =new ActionsTableModel();
+      aTableModel.setActions(conflict.actions);
+      aTable = new JTable(aTableModel);
+      DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+      centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+      TimeCellRenderer timeRenderer=new TimeCellRenderer();
+      for (int i=0; i<aTableModel.getColumnCount(); i++) {
+        if (aTableModel.getColumnClass(i).equals(String.class))
+          aTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+      }
+      aTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.6f),
+          Math.min(Math.round(size.height * 0.6f),aTable.getPreferredSize().height+10)));
+      aTable.setFillsViewportHeight(true);
+      aTable.setAutoCreateRowSorter(true);
+      aTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+      aTable.setRowSelectionAllowed(true);
+      aTable.setColumnSelectionAllowed(false);
+    }
+    if (mapFrame==null) {
+      JSplitPane spl1=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,mapView,altiView);
+      spl1.setDividerLocation(mapView.getPreferredSize().width);
+      JScrollPane scrollPane = new JScrollPane(aTable);
+      JSplitPane spl2=new JSplitPane(JSplitPane.VERTICAL_SPLIT,spl1,scrollPane);
+      spl2.setDividerLocation(mapView.getPreferredSize().height);
+
+      mapFrame = new JFrame("Conflict geometry");
+      mapFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+      mapFrame.getContentPane().add(spl2, BorderLayout.CENTER);
+      //Display the window.
+      mapFrame.pack();
+      mapFrame.setSize(Math.min(mainFrame.getWidth(),Math.round(0.8f*size.width)),
+          Math.min(mainFrame.getHeight(),Math.round(0.8f*size.height)));
+      mapFrame.setLocation(size.width -mapFrame.getWidth()-50, size.height -mapFrame.getHeight()-50);
+      mapFrame.setVisible(true);
+    }
+    mapFrame.setTitle("Conflict of flights " + conflict.flights[0].flightId + " and " + conflict.flights[1].flightId);
+    mapView.setConflict(conflict);
     altiView.setConflict(conflict);
+    aTableModel.setActions(conflict.actions);
+    aTable.repaint();
   }
   
 }
