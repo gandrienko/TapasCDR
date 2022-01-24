@@ -127,22 +127,34 @@ public class AltiView extends JPanel {
       g.drawLine(x0,yTop,xEnd,yTop);
     }
     else {
-      int altDiff=maxAlt-minAlt, yDiff=yBottom-yTop, yMin=yBottom-yDiff/3;
+      int altDiff=maxAlt-minAlt, yMin=yBottom-(yBottom-yTop)/3,
+          yDiff=yMin-yTop;
       g.setColor(Color.gray);
       g.drawLine(x0-3,yMin,x0+3,yMin);
       altStr=String.format("%d",minAlt);
       g.drawString(altStr,xMarg,yMin);
-      ConflictPoint cp1 = conflict.flights[0].first, cp2 = conflict.flights[1].first;
-      int y11=yMin-Math.round((1.0f*cp1.altitude-minAlt)/altDiff*yDiff),
-          y21=yMin-Math.round((1.0f*cp2.altitude-minAlt)/altDiff*yDiff);
-      cp1 = conflict.flights[0].closest; cp2 = conflict.flights[1].closest;
-      int y12=yMin-Math.round((1.0f*cp1.altitude-minAlt)/altDiff*yDiff),
-          y22=yMin-Math.round((1.0f*cp2.altitude-minAlt)/altDiff*yDiff);
+      int y11=yMin-Math.round((1.0f*conflict.flights[0].altitude-minAlt)/altDiff*yDiff),
+          y21=yMin-Math.round((1.0f*conflict.flights[1].altitude-minAlt)/altDiff*yDiff);
       g.setStroke(stroke2);
-      g.setColor(colorF1);
-      g.drawLine(x0,y11,x1,y12);
-      g.setColor(colorF2);
-      g.drawLine(x0,y21,x1,y22);
+      int xx1=x0;
+      for (int i=0; i<3; i++) {
+        ConflictPoint cp1 = (i==0)?conflict.flights[0].first:(i==1)?conflict.flights[0].closest:conflict.flights[0].last,
+            cp2 = (i==0)?conflict.flights[1].first:(i==1)?conflict.flights[1].closest:conflict.flights[1].last;
+        int y12=yMin-Math.round((1.0f*cp1.altitude-minAlt)/altDiff*yDiff),
+            y22=yMin-Math.round((1.0f*cp2.altitude-minAlt)/altDiff*yDiff);
+        int xx2=(i==0)?x1:(i==1)?x2:xEnd;
+        g.setColor(colorF1);
+        g.drawLine(xx1,y11,xx2,y12);
+        g.setColor(colorF2);
+        g.drawLine(xx1,y21,xx2,y22);
+        if (y12!=y22 && (y12!=y11 || y22!=y21)) {
+          altStr=String.format("%d",Math.abs(cp1.altitude-cp2.altitude));
+          g.setColor((i==0)?Color.orange.darker():(i==1)?Color.red:Color.green.darker());
+          g.drawString(altStr,xx2-fm.stringWidth(altStr),Math.max(y12,y22)+fm.getAscent());
+        }
+        xx1=xx2;
+        y11=y12; y21=y22;
+      }
     }
   
     g.setStroke(origStroke);
