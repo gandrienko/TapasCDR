@@ -231,4 +231,65 @@ public class DataReader {
     }
     return nOk;
   }
+  
+  public static ArrayList<Action> getActions(CsvReader data) {
+    if (data==null || data.columns==null || data.rows==null || data.rows.isEmpty())
+      return null;
+    ArrayList<Action> actions=new ArrayList<Action>(data.getNRows());
+    for (int r=0; r<data.getNRows(); r++) {
+      Action a=new Action();
+      for (int c=0; c<data.getNColumns(); c++) {
+        String colName=data.columns[c], sValue=data.getValue(r,c);
+        if (sValue==null || sValue.equalsIgnoreCase("null"))
+          continue;
+        if (colName.equalsIgnoreCase("ResolutionID")) a.actionId=sValue; else
+        if (colName.equalsIgnoreCase("ConflictID")) a.conflictId=sValue; else
+        if (colName.equalsIgnoreCase("RTkey")) a.flightId=sValue; else
+        if (colName.equalsIgnoreCase("ResolutionActionType")) a.actionType=sValue; else
+        if (colName.equalsIgnoreCase("ResolutionAction"))
+          a.actionValue=Integer.parseInt(sValue);
+        else
+        if (colName.equalsIgnoreCase("ActionRank"))
+          a.rank=Integer.parseInt(sValue);
+        else
+        if (colName.equalsIgnoreCase("VSpeedChange"))
+          a.vSpeedChange=Math.round(Float.parseFloat(sValue));
+        else
+        if (colName.equalsIgnoreCase("HSpeedChange"))
+          a.hSpeedChange=Double.parseDouble(sValue);
+        else
+        if (colName.equalsIgnoreCase("CourseChange"))
+          a.courseChange=Double.parseDouble(sValue);
+        else
+        if (colName.equalsIgnoreCase("HShiftFromExitPoint"))
+          a.hShiftExit=Double.parseDouble(sValue);
+        else
+        if (colName.equalsIgnoreCase("VShiftFromExitPoint"))
+          a.vShiftExit=Double.parseDouble(sValue);
+        else
+        if (colName.equalsIgnoreCase("Bearing"))
+          a.bearing=Double.parseDouble(sValue);
+        else
+        if (colName.equalsIgnoreCase("Q-Value"))
+          a.qValue=Double.parseDouble(sValue);
+        else
+        if (colName.equalsIgnoreCase("AdditionalNauticalMiles"))
+          a.addMiles=Double.parseDouble(sValue);
+        else
+        if (colName.equalsIgnoreCase("Duration"))
+          a.addTime=Math.round(Double.parseDouble(sValue));
+        else
+        if (colName.equalsIgnoreCase("Prioritization"))
+          a.hitMapId=sValue;
+        else
+        if (colName.equalsIgnoreCase("FilteredOut"))
+          a.whyNot=sValue;
+      }
+      if (a.actionId!=null && a.conflictId!=null && a.flightId!=null && a.actionType!=null)
+        actions.add(a);
+    }
+    if (actions.isEmpty())
+      return null;
+    return actions;
+  }
 }

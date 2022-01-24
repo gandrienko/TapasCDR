@@ -74,6 +74,10 @@ public class Conflict {
    * “issued”: the resolution action was issued in the previous timestep
    */
   public String commandCategory=null;
+  /**
+   * Suggested resolution actions
+   */
+  public ArrayList<Action> actions=null;
   
   public static int getTypeNum(String sValue) {
     for (int k=0; k<typeStrings.length; k++)
