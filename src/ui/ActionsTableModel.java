@@ -69,7 +69,7 @@ public class ActionsTableModel extends AbstractTableModel {
     if (cName.equals("Bearing"))
       return a.bearing;
     if (cName.equals("Why not"))
-      return a.hShiftExit;
+      return a.whyNot;
     return null;
   }
 }
