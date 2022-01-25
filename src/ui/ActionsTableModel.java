@@ -46,7 +46,7 @@ public class ActionsTableModel extends AbstractTableModel {
     if (cName.equals("Flight"))
       return a.flightId;
     if (cName.equals("Action"))
-      return Action.getMeaningOfActionType(a.actionType);
+      return a.actionType+": "+Action.getMeaningOfActionType(a.actionType);
     if (cName.equals("Value"))
       return a.actionValue;
     if (cName.equals("Rank"))
@@ -86,7 +86,7 @@ public class ActionsTableModel extends AbstractTableModel {
       for (int i=1; i<Action.type_meanings.length; i++)
         if (Action.type_meanings[i].length()>s.length())
           s=Action.type_meanings[i];
-      label.setText(s);
+      label.setText("A4: "+s);
     }
     else
     if (colNames[col].equals("Why not")) {
