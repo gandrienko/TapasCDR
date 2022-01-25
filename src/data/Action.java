@@ -123,7 +123,7 @@ public class Action {
     int n=0;
     for (Action a:actions) {
       for (Conflict c:conflicts) {
-        if (c.isPrimary &&a.conflictId.equals(c.conflictId)) {
+        if (a.conflictId.equals(c.conflictId)) {
           if (c.actions==null)
             c.actions=new ArrayList<Action>(20);
           c.actions.add(a);

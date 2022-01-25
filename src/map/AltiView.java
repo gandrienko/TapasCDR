@@ -150,7 +150,7 @@ public class AltiView extends JPanel {
         if (y12!=y22 && (y12!=y11 || y22!=y21)) {
           altStr=String.format("%d",Math.abs(cp1.altitude-cp2.altitude));
           g.setColor((i==0)?Color.orange.darker():(i==1)?Color.red:Color.green.darker());
-          g.drawString(altStr,xx2-fm.stringWidth(altStr),Math.max(y12,y22)+fm.getAscent());
+          g.drawString(altStr,xx2-fm.stringWidth(altStr),Math.max(y12,y22)+fm.getAscent()+5);
         }
         xx1=xx2;
         y11=y12; y21=y22;

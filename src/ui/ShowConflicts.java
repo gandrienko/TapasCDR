@@ -191,7 +191,7 @@ public class ShowConflicts {
     mapView.setConflict(conflict);
     altiView.setConflict(conflict);
     aTableModel.setActions(conflict.actions);
-    aTable.repaint();
+    aTableModel.fireTableDataChanged();
   }
   
 }
