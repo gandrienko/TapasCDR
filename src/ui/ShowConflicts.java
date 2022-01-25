@@ -128,7 +128,7 @@ public class ShowConflicts implements ItemListener{
       Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
   
       cTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.6f),
-          Math.min(Math.round(size.height * 0.6f),cTable.getPreferredSize().height+10)));
+          Math.max(Math.min(Math.round(size.height * 0.6f),cTable.getPreferredSize().height+10),size.height/12)));
       cTable.setFillsViewportHeight(true);
       cTable.setAutoCreateRowSorter(true);
       cTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -236,7 +236,7 @@ public class ShowConflicts implements ItemListener{
       spl1.setDividerLocation(mapView.getPreferredSize().width);
       JScrollPane scrollPane = new JScrollPane(aTable);
       JSplitPane spl2=new JSplitPane(JSplitPane.VERTICAL_SPLIT,spl1,scrollPane);
-      spl2.setDividerLocation(Math.round(0.4f*size.height));
+      spl2.setDividerLocation(Math.round(0.3f*size.height));
 
       mapFrame = new JFrame("Conflict geometry");
       mapFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -244,8 +244,8 @@ public class ShowConflicts implements ItemListener{
       //Display the window.
       mapFrame.pack();
       mapFrame.setSize(Math.min(mainFrame.getWidth(),Math.round(0.8f*size.width)),
-          Math.round(0.6f*size.height));
-      mapFrame.setLocation(size.width -mapFrame.getWidth()-50, size.height -mapFrame.getHeight()-50);
+          Math.round(0.5f*size.height));
+      mapFrame.setLocation(mainFrame.getX(), mainFrame.getY()+mainFrame.getHeight()-50);
       mapFrame.setVisible(true);
     }
     if (conflict.equals(mapView.conflict))
