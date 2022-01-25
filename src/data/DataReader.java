@@ -285,8 +285,14 @@ public class DataReader {
         if (colName.equalsIgnoreCase("FilteredOut"))
           a.whyNot=sValue;
       }
-      if (a.actionId!=null && a.conflictId!=null && a.flightId!=null && a.actionType!=null)
-        actions.add(a);
+      if (a.actionId!=null && a.conflictId!=null && a.flightId!=null && a.actionType!=null) {
+        int idx=actions.size();
+        for (int i=0; i<actions.size(); i++)
+          if (actions.get(i).rank>a.rank) {
+            idx = i; break;
+          }
+        actions.add(idx,a);
+      }
     }
     if (actions.isEmpty())
       return null;
