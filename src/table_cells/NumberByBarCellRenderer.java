@@ -61,16 +61,25 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
     }
     else
       this.value=Double.NaN;
-    if (value==null || this.value<min || this.value>max)
+    if (value==null)
       setText("");
-    else {
+    else
+    if (this.value<min || this.value>max) {
+      if (this.value<min)
+        min=this.value;
+      else
+      if (this.value>max)
+        max=this.value;
+      table.repaint();
+    }
+    if (value!=null) {
       if (value instanceof Integer)
         setText(String.format("%d",value));
       else
-        if (precision<0)
-          setText(value.toString());
-        else
-          setText(String.format("%."+precision+"f",value));
+      if (precision<0)
+        setText(value.toString());
+      else
+        setText(String.format("%."+precision+"f",value));
     }
     if (isSelected)
       setBackground(table.getSelectionBackground());
