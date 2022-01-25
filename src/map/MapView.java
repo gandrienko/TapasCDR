@@ -69,8 +69,11 @@ public class MapView extends JPanel {
     g.setColor(getBackground());
     g.fillRect(0,0,w+1,h+1);
     
-    if (conflict==null || !metrics.hasTerritoryBounds())
+    if (conflict==null || !metrics.hasTerritoryBounds()) {
+      gr.drawImage(off_Image,0,0,null);
+      off_Valid=true;
       return;
+    }
     
     if (metrics.viewport==null || metrics.viewport.width!=w || metrics.viewport.height!=h)
       metrics.setViewport(new Rectangle(0,0,w,h));

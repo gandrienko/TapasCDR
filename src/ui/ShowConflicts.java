@@ -163,11 +163,18 @@ public class ShowConflicts implements ItemListener{
         if (c.sameFlights(conflicts.get(i)))
           cIdx=i;
       if (cIdx<0) {
+        /*
         mapFrame.dispose();
         mapFrame=null;
         mapView=null;
         altiView=null;
         aTable=null;
+        */
+        mapFrame.setTitle("The earlier shown information expired!");
+        mapView.setConflict(null);
+        altiView.setConflict(null);
+        aTableModel.setActions(null);
+        aTableModel.fireTableDataChanged();
       }
       else {
         showConflictGeometry(conflicts.get(cIdx));
@@ -208,6 +215,21 @@ public class ShowConflicts implements ItemListener{
       aTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
       aTable.setRowSelectionAllowed(true);
       aTable.setColumnSelectionAllowed(false);
+
+      aTable.addMouseListener(new MouseAdapter() {
+        public void mousePressed(MouseEvent e) {
+          super.mousePressed(e);
+          if (e.getButton()==MouseEvent.BUTTON1) {
+            int rowIndex=aTable.rowAtPoint(e.getPoint());
+            if (rowIndex<0)
+              return;
+            int realRowIndex = aTable.convertRowIndexToModel(rowIndex);
+            if (realRowIndex>=0 && realRowIndex<aTableModel.actions.size()) {
+              data.Action a=aTableModel.actions.get(realRowIndex);
+            }
+          }
+        }
+      });
     }
     if (mapFrame==null) {
       JSplitPane spl1=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,mapView,altiView);
