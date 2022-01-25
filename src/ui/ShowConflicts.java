@@ -245,7 +245,7 @@ public class ShowConflicts implements ItemListener{
       mapFrame.pack();
       mapFrame.setSize(Math.min(mainFrame.getWidth(),Math.round(0.8f*size.width)),
           Math.round(0.5f*size.height));
-      mapFrame.setLocation(mainFrame.getX(), mainFrame.getY()+mainFrame.getHeight()-50);
+      mapFrame.setLocation(mainFrame.getX(), mainFrame.getY()+mainFrame.getHeight());
       mapFrame.setVisible(true);
     }
     if (conflict.equals(mapView.conflict))
