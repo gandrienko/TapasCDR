@@ -161,6 +161,9 @@ public class ShowConflicts {
       for (int i=0; i<aTableModel.getColumnCount(); i++) {
         if (aTableModel.getColumnClass(i).equals(String.class))
           aTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        int w=aTableModel.getPreferredColumnWidth(i);
+        if (w>0)
+          aTable.getColumnModel().getColumn(i).setPreferredWidth(w);
       }
       aTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.6f),
           Math.min(Math.round(size.height * 0.6f),aTable.getPreferredSize().height+10)));

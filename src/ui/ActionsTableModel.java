@@ -2,6 +2,7 @@ package ui;
 
 import data.Action;
 
+import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 
@@ -45,7 +46,7 @@ public class ActionsTableModel extends AbstractTableModel {
     if (cName.equals("Flight"))
       return a.flightId;
     if (cName.equals("Action"))
-      return a.actionType;
+      return Action.getMeaningOfActionType(a.actionType);
     if (cName.equals("Value"))
       return a.actionValue;
     if (cName.equals("Rank"))
@@ -71,5 +72,26 @@ public class ActionsTableModel extends AbstractTableModel {
     if (cName.equals("Why not"))
       return a.whyNot;
     return null;
+  }
+  
+  public int getPreferredColumnWidth(int col) {
+    if (!getColumnClass(col).equals(String.class))
+      return 0;
+    JLabel label=new JLabel(colNames[col]);
+    if (colNames[col].startsWith("Flight"))
+      label.setText("000000000");
+    else
+    if (colNames[col].equals("Action")) {
+      String s=Action.type_meanings[0];
+      for (int i=1; i<Action.type_meanings.length; i++)
+        if (Action.type_meanings[i].length()>s.length())
+          s=Action.type_meanings[i];
+      label.setText(s);
+    }
+    else
+    if (colNames[col].equals("Why not")) {
+      label.setText("Horizontal speed cannot be decreased");
+    }
+    return label.getPreferredSize().width+10;
   }
 }

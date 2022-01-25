@@ -139,4 +139,14 @@ public class Action {
     }
     return n;
   }
+  
+  public static String getMeaningOfActionType(String type) {
+    if (type==null)
+      return  null;
+    type=type.toUpperCase();
+    for (int i=0; i<action_types.length; i++)
+      if (type.equals(action_types[i]))
+        return type_meanings[i];
+    return type;
+  }
 }
