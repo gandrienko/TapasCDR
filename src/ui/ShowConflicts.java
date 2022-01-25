@@ -25,6 +25,8 @@ public class ShowConflicts implements ItemListener{
    */
   public ArrayList<Conflict> conflicts=null;
   
+  public boolean isSecondary=false;
+  
   public ConflictTableModel cTableModel=null;
   public ActionsTableModel aTableModel =null;
   
@@ -35,6 +37,8 @@ public class ShowConflicts implements ItemListener{
   public JFrame mainFrame=null, mapFrame=null;
   
   protected JComboBox portionChoice=null;
+  
+  protected ShowConflicts showSecondary=null;
   
   public void setDataPortions(ArrayList<DataPortion> portions) {
     this.portions = portions;
@@ -65,6 +69,10 @@ public class ShowConflicts implements ItemListener{
     }
   }
   
+  public void setSecondary(boolean secondary) {
+    isSecondary = secondary;
+  }
+  
   public ArrayList<Conflict> getConflicts() {
     return conflicts;
   }
@@ -77,6 +85,18 @@ public class ShowConflicts implements ItemListener{
     cTableModel.setConflicts(conflicts);
     if (cTable!=null)
       cTableModel.fireTableDataChanged();
+    
+    if (conflicts==null || conflicts.isEmpty()) {
+      if (mapView!=null)
+        mapView.setConflict(null);
+      if (altiView!=null)
+        altiView.setConflict(null);
+      if (aTableModel!=null) {
+        aTableModel.setActions(null);
+        aTableModel.fireTableDataChanged();
+      }
+      return;
+    }
     
     LocalDateTime dt=conflicts.get(0).detectionTime;
     String frameTitle=String.format("Conflicts detected %02d/%02d/%04d at %02d:%02d:%02d",
@@ -140,18 +160,22 @@ public class ShowConflicts implements ItemListener{
       mainFrame.getContentPane().add(scrollPane, BorderLayout.CENTER);
       //Display the window.
       mainFrame.pack();
-      mainFrame.setLocation(30, 30);
+      if (isSecondary)
+        mainFrame.setLocation(size.width-mainFrame.getWidth()-30,100);
+      else
+        mainFrame.setLocation(30, 30);
       mainFrame.setVisible(true);
-      mainFrame.addWindowListener(new WindowAdapter() {
-        @Override
-        public void windowClosing(WindowEvent e) {
-          if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
-              "Sure to exitt?",
-              "Sure to exit?",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE)
-              ==JOptionPane.YES_OPTION)
-            System.exit(0);
-        }
-      });
+      if (!isSecondary)
+        mainFrame.addWindowListener(new WindowAdapter() {
+          @Override
+          public void windowClosing(WindowEvent e) {
+            if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
+                "Sure to exitt?",
+                "Sure to exit?",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE)
+                ==JOptionPane.YES_OPTION)
+              System.exit(0);
+          }
+        });
     }
     else
     if (mapView!=null && mapView.conflict!=null) {
@@ -173,8 +197,10 @@ public class ShowConflicts implements ItemListener{
         mapFrame.setTitle("The earlier shown information expired!");
         mapView.setConflict(null);
         altiView.setConflict(null);
-        aTableModel.setActions(null);
-        aTableModel.fireTableDataChanged();
+        if (aTableModel!=null) {
+          aTableModel.setActions(null);
+          aTableModel.fireTableDataChanged();
+        }
       }
       else {
         showConflictGeometry(conflicts.get(cIdx));
@@ -188,13 +214,13 @@ public class ShowConflicts implements ItemListener{
     Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
     if (mapView==null) {
       mapView=new MapView();
-      mapView.setPreferredSize(new Dimension(size.height/3,size.height/3));
+      mapView.setPreferredSize(new Dimension(size.height/4,size.height/4));
     }
     if (altiView==null) {
       altiView=new AltiView();
       altiView.setPreferredSize(new Dimension(size.width/3,size.height/4));
     }
-    if (aTable==null) {
+    if (!isSecondary && aTable==null) {
       aTableModel =new ActionsTableModel();
       aTableModel.setActions(conflict.actions);
       aTable = new JTable(aTableModel);
@@ -226,6 +252,17 @@ public class ShowConflicts implements ItemListener{
             int realRowIndex = aTable.convertRowIndexToModel(rowIndex);
             if (realRowIndex>=0 && realRowIndex<aTableModel.actions.size()) {
               data.Action a=aTableModel.actions.get(realRowIndex);
+              if (a.conflicts==null || a.conflicts.isEmpty()) {
+                if (showSecondary!=null)
+                  showSecondary.setConflicts(null);
+              }
+              else {
+                if (showSecondary==null) {
+                  showSecondary=new ShowConflicts();
+                  showSecondary.setSecondary(true);
+                }
+                showSecondary.setConflicts(a.conflicts);
+              }
             }
           }
         }
@@ -234,17 +271,20 @@ public class ShowConflicts implements ItemListener{
     if (mapFrame==null) {
       JSplitPane spl1=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,mapView,altiView);
       spl1.setDividerLocation(mapView.getPreferredSize().width);
-      JScrollPane scrollPane = new JScrollPane(aTable);
-      JSplitPane spl2=new JSplitPane(JSplitPane.VERTICAL_SPLIT,spl1,scrollPane);
-      spl2.setDividerLocation(Math.round(0.3f*size.height));
+      JSplitPane spl2=null;
+      if (aTable!=null) {
+        JScrollPane scrollPane = new JScrollPane(aTable);
+        spl2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, spl1, scrollPane);
+        spl2.setDividerLocation(Math.round(0.3f * size.height));
+      }
 
       mapFrame = new JFrame("Conflict geometry");
       mapFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-      mapFrame.getContentPane().add(spl2, BorderLayout.CENTER);
+      mapFrame.getContentPane().add((spl2==null)?spl1:spl2, BorderLayout.CENTER);
       //Display the window.
       mapFrame.pack();
       mapFrame.setSize(Math.min(mainFrame.getWidth(),Math.round(0.8f*size.width)),
-          Math.round(0.5f*size.height));
+          (isSecondary)?Math.round(0.25f*size.height):Math.round(0.5f*size.height));
       mapFrame.setLocation(mainFrame.getX(), mainFrame.getY()+mainFrame.getHeight());
       mapFrame.setVisible(true);
     }
@@ -253,8 +293,10 @@ public class ShowConflicts implements ItemListener{
     mapFrame.setTitle("Conflict of flights " + conflict.flights[0].flightId + " and " + conflict.flights[1].flightId);
     mapView.setConflict(conflict);
     altiView.setConflict(conflict);
-    aTableModel.setActions(conflict.actions);
-    aTableModel.fireTableDataChanged();
+    if (aTableModel!=null) {
+      aTableModel.setActions(conflict.actions);
+      aTableModel.fireTableDataChanged();
+    }
   }
   
 }
