@@ -1,6 +1,7 @@
 package ui;
 
 import data.Conflict;
+import data.DataPortion;
 import map.AltiView;
 import map.MapView;
 import table_cells.NumberByBarCellRenderer;
@@ -11,17 +12,18 @@ import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.*;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 
-public class ShowConflicts {
+public class ShowConflicts implements ItemListener{
+  /**
+   * For testing: data divided into portions; one portion is shown at each time moment
+   */
+  public ArrayList<DataPortion> portions=null;
   /**
    * The set of conflicts to be shown
    */
   public ArrayList<Conflict> conflicts=null;
-  /**
-   * The conflicts are separated into primary and secondary
-   */
-  public ArrayList<Conflict> conflicts1=null, conflicts2;
   
   public ConflictTableModel cTableModel=null;
   public ActionsTableModel aTableModel =null;
@@ -32,45 +34,56 @@ public class ShowConflicts {
   public JTable cTable=null, aTable=null;
   public JFrame mainFrame=null, mapFrame=null;
   
+  protected JComboBox portionChoice=null;
+  
+  public void setDataPortions(ArrayList<DataPortion> portions) {
+    this.portions = portions;
+    if (portions==null || portions.isEmpty())
+      return;
+    setConflicts(portions.get(0).conflicts);
+    portionChoice=new JComboBox();
+    for (int i=0; i<portions.size(); i++) {
+      DataPortion p=portions.get(i);
+      LocalDateTime dt=LocalDateTime.ofEpochSecond(p.timeUnix,0, ZoneOffset.UTC);
+      portionChoice.addItem(String.format("%d : %02d:%02d:%02d on %02d/%02d/%04d",p.timeUnix,
+          dt.getHour(),dt.getMinute(),dt.getSecond(),dt.getDayOfMonth(),dt.getMonthValue(),dt.getYear()));
+    }
+    portionChoice.setSelectedIndex(0);
+    portionChoice.addItemListener(this);
+    JPanel p=new JPanel();
+    p.setLayout(new FlowLayout(FlowLayout.CENTER,0,0));
+    p.add(portionChoice);
+    mainFrame.getContentPane().add(p,BorderLayout.SOUTH);
+    mainFrame.pack();
+    mainFrame.repaint();
+  }
+  
+  public void itemStateChanged(ItemEvent e){
+    if (e.getSource().equals(portionChoice)) {
+      int pIdx=portionChoice.getSelectedIndex();
+      setConflicts(portions.get(pIdx).conflicts);
+    }
+  }
+  
   public ArrayList<Conflict> getConflicts() {
     return conflicts;
   }
   
   public void setConflicts(ArrayList<Conflict> conflicts) {
     this.conflicts = conflicts;
-    if (conflicts1!=null)
-      conflicts1.clear();
-    if (conflicts2!=null)
-      conflicts2.clear();
-    if (conflicts==null || conflicts.isEmpty())
-      return;
-    if (conflicts1==null)
-      conflicts1=new ArrayList<Conflict>(20);
-    conflicts1.add(conflicts.get(0));
-    for (int i=1; i<conflicts.size(); i++) {
-      boolean found=false;
-      Conflict c=conflicts.get(i);
-      for (Conflict c1:conflicts1) {
-        found=c1.typeNum==c.typeNum && c1.sameFlights(c);
-        if (found)
-          break;
-      }
-      if (found) {
-        if (conflicts2==null)
-          conflicts2=new ArrayList<Conflict>(conflicts.size()-1);
-        conflicts2.add(c);
-      }
-      else
-        conflicts1.add(c);
-    }
     
     if (cTableModel==null)
       cTableModel=new ConflictTableModel();
-    cTableModel.setConflicts(conflicts1);
+    cTableModel.setConflicts(conflicts);
+    if (cTable!=null)
+      cTableModel.fireTableDataChanged();
     
     LocalDateTime dt=conflicts.get(0).detectionTime;
     String frameTitle=String.format("Conflicts detected %02d/%02d/%04d at %02d:%02d:%02d",
         dt.getDayOfMonth(),dt.getMonthValue(),dt.getYear(),dt.getHour(),dt.getMinute(),dt.getSecond());
+    
+    if (mainFrame!=null)
+      mainFrame.setTitle(frameTitle);
     
     if (cTable==null) {
       cTable = new JTable(cTableModel);
@@ -106,7 +119,8 @@ public class ShowConflicts {
             if (rowIndex<0)
               return;
             int realRowIndex = cTable.convertRowIndexToModel(rowIndex);
-            showConflictGeometry(conflicts1.get(realRowIndex));
+            if (realRowIndex>=0 && realRowIndex<cTableModel.conflicts.size())
+              showConflictGeometry(cTableModel.conflicts.get(realRowIndex));
           }
         }
       });
@@ -138,6 +152,28 @@ public class ShowConflicts {
             System.exit(0);
         }
       });
+    }
+    else
+    if (mapView!=null && mapView.conflict!=null) {
+      //check if the current set of conflicts contains data about a conflict between the same flights
+      //as currently shown in the map view
+      Conflict c=mapView.conflict;
+      int cIdx=-1;
+      for (int i=0; i<conflicts.size() && cIdx<0; i++)
+        if (c.sameFlights(conflicts.get(i)))
+          cIdx=i;
+      if (cIdx<0) {
+        mapFrame.dispose();
+        mapFrame=null;
+        mapView=null;
+        altiView=null;
+        aTable=null;
+      }
+      else {
+        showConflictGeometry(conflicts.get(cIdx));
+        int rIdx=cTable.convertRowIndexToView(cIdx);
+        cTable.setRowSelectionInterval(rIdx, rIdx);
+      }
     }
   }
   
@@ -190,6 +226,8 @@ public class ShowConflicts {
       mapFrame.setLocation(size.width -mapFrame.getWidth()-50, size.height -mapFrame.getHeight()-50);
       mapFrame.setVisible(true);
     }
+    if (conflict.equals(mapView.conflict))
+      return;
     mapFrame.setTitle("Conflict of flights " + conflict.flights[0].flightId + " and " + conflict.flights[1].flightId);
     mapView.setConflict(conflict);
     altiView.setConflict(conflict);

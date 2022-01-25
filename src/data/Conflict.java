@@ -78,6 +78,10 @@ public class Conflict {
    * Suggested resolution actions
    */
   public ArrayList<Action> actions=null;
+  /**
+   * How this conflict will change depending on the resolution actions taken
+   */
+  public ArrayList<Conflict> actionResults=null;
   
   public static int getTypeNum(String sValue) {
     for (int k=0; k<typeStrings.length; k++)
