@@ -4,7 +4,12 @@ package data;
  * Describes a 3D+T point of a flight trajectory, in particular, a projection point
  */
 
-public class FlightPoint {
+public class FlightPoint implements Comparable<FlightPoint>{
+  /**
+   * Type of this point: p - point of projection, d - point of conflict detection,
+   * f, c, l - first, closest, and last point of the conflict.
+   */
+  public char type='p';
   /**
    * points_of_projection.csv: projection_ID -
    * This ID has the following form: TimePoint_RTkey_resolutionActionType_ResolutionActionValue
@@ -32,4 +37,13 @@ public class FlightPoint {
    * point altitude, in feet
    */
   public int altitude=0;
+  
+  public int compareTo(FlightPoint p) {
+    if (p==null) return -1;
+    return (pointTimeUnix<p.pointTimeUnix)?-1:(pointTimeUnix>p.pointTimeUnix)?1:0;
+  }
+  
+  public String toString() {
+    return "type="+type+"; time="+pointTimeUnix;
+  }
 }

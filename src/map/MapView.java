@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 
 public class MapView extends JPanel {
   public static final Color colorF1=new Color(128,0,0), colorF2=new Color(0,0,128),
+      paleColorF1 =new Color(255,0,0,128), paleColorF2 =new Color(0,0,255,128),
       textColorF1=new Color(96,0,0,128), textColorF2=new Color(0,0,96,128);
   public static final Stroke stroke2=new BasicStroke(2);
   public static final float dash[] = {2.0f,2.0f};
@@ -140,38 +141,39 @@ public class MapView extends JPanel {
     }
     
     if (f1.pp!=null) {
-      g.setColor(textColorF1);
-      int x0=0,y0=0;
+      g.setColor(paleColorF1);
+      int x0=x01,y0=y01;
       for (int i=0; i<f1.pp.length; i++) {
         int x=metrics.scrX(f1.pp[i].lon), y=metrics.scrY(f1.pp[i].lat);
         //g.drawLine(x-3,y-3,x+3,y+3);
         //g.drawLine(x-3,y+3,x+3,y-3);
         g.setStroke(stroke);
         g.drawRect(x-3,y-3,6,6);
-        if (i>0) {
+        if (f1.pp[i].pointTimeUnix>f1.last.pointTimeUnix) {
           g.setStroke(dashedStroke);
           g.drawLine(x0, y0, x, y);
+          x0=x; y0=y;
         }
-        x0=x; y0=y;
       }
     }
-  
+    /**/
     if (f2.pp!=null) {
-      g.setColor(textColorF2);
-      int x0=0,y0=0;
+      g.setColor(paleColorF2);
+      int x0=x02,y0=y02;
       for (int i=0; i<f2.pp.length; i++) {
         int x=metrics.scrX(f2.pp[i].lon), y=metrics.scrY(f2.pp[i].lat);
         //g.drawLine(x-3,y-3,x+3,y+3);
         //g.drawLine(x-3,y+3,x+3,y-3);
         g.setStroke(stroke);
         g.drawRect(x-3,y-3,6,6);
-        if (i>0) {
+        if (f2.pp[i].pointTimeUnix>f2.last.pointTimeUnix) {
           g.setStroke(dashedStroke);
           g.drawLine(x0, y0, x, y);
+          x0=x; y0=y;
         }
-        x0=x; y0=y;
       }
     }
+    /**/
     g.setStroke(stroke);
     
     gr.drawImage(off_Image,0,0,null);

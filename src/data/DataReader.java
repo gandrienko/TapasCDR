@@ -208,8 +208,8 @@ public class DataReader {
           
           if (colName.startsWith("time_to_") || colName.startsWith("t_to_")) {
             cp.timeTo=Double.parseDouble(sValue);
-            long timeUnix=c.detectionTimeUnix+Math.round(cp.timeTo);
-            cp.time=LocalDateTime.ofEpochSecond(timeUnix,0, ZoneOffset.UTC);
+            cp.pointTimeUnix=c.detectionTimeUnix+Math.round(cp.timeTo);
+            cp.time=LocalDateTime.ofEpochSecond(cp.pointTimeUnix,0, ZoneOffset.UTC);
           }
           else
           if (colName.endsWith("_lon"))

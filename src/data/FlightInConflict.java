@@ -1,6 +1,7 @@
 package data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Contains information about one flight involved in a conflict
@@ -104,6 +105,7 @@ public class FlightInConflict {
     pp=new FlightPoint[i2-i1];
     for (int i=i1; i<i2; i++)
       pp[i-i1]=pts.get(i);
+    Arrays.sort(pp);
     return pp.length;
   }
 }

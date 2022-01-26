@@ -34,7 +34,11 @@ public class ConflictPoint {
    */
   public double timeTo=Double.NaN;
   /**
-   * Time of the point; results from adding timeToPoint to the time of conflict detection
+   * Unix time of this point; results from adding timeToPoint to the time of conflict detection
+   */
+  public long pointTimeUnix=0;
+  /**
+   * Time of the point; results from converting pointTimeUnix to LocalDateTime
    */
   public LocalDateTime time=null;
   /**
