@@ -130,6 +130,34 @@ public class MapView extends JPanel {
     }
     g.setStroke(stroke);
     
+    if (f1.pp!=null) {
+      g.setColor(colorF1);
+      int x0=0,y0=0;
+      for (int i=0; i<f1.pp.length; i++) {
+        int x=metrics.scrX(f1.pp[i].lon), y=metrics.scrY(f1.pp[i].lat);
+        //g.drawLine(x-3,y-3,x+3,y+3);
+        //g.drawLine(x-3,y+3,x+3,y-3);
+        g.drawRect(x-3,y-3,6,6);
+        if (i>0)
+          g.drawLine(x0,y0,x,y);
+        x0=x; y0=y;
+      }
+    }
+  
+    if (f2.pp!=null) {
+      g.setColor(colorF2);
+      int x0=0,y0=0;
+      for (int i=0; i<f2.pp.length; i++) {
+        int x=metrics.scrX(f2.pp[i].lon), y=metrics.scrY(f2.pp[i].lat);
+        //g.drawLine(x-3,y-3,x+3,y+3);
+        //g.drawLine(x-3,y+3,x+3,y-3);
+        g.drawRect(x-3,y-3,6,6);
+        if (i>0)
+          g.drawLine(x0,y0,x,y);
+        x0=x; y0=y;
+      }
+    }
+    
     gr.drawImage(off_Image,0,0,null);
     off_Valid=true;
   }
