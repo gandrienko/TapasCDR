@@ -153,7 +153,7 @@ public class Conflict {
   /**
    * @return 4 coordinates: min longitude, min latitude, max longitude, max latitude
    */
-  public double[] getGeoBoundaries(){
+  public double[] getConflictGeoBoundaries(){
     if (flights==null || flights[0]==null)
       return null;
     double xMin=flights[0].lon, xMax=xMin, yMin=flights[0].lat, yMax=yMin;
@@ -170,6 +170,17 @@ public class Conflict {
         if (xMin>cp.lon) xMin=cp.lon; else if (xMax<cp.lon) xMax=cp.lon;
         if (yMin>cp.lat) yMin=cp.lat; else if (yMax<cp.lat) yMax=cp.lat;
       }
+    }
+    double minmax[]={xMin,yMin,xMax,yMax};
+    return minmax;
+  }
+  
+  public double[] getProjectionGeoBoundaries() {
+    if (flights==null || flights[0]==null)
+      return null;
+    double xMin=flights[0].lon, xMax=xMin, yMin=flights[0].lat, yMax=yMin;
+    for (int i=0; i<flights.length; i++) {
+      FlightInConflict f = flights[i];
       if (flights[i].pp!=null)
         for (int j=0; j<flights[i].pp.length; j++) {
           FlightPoint cp=flights[i].pp[j];
@@ -177,6 +188,8 @@ public class Conflict {
           if (yMin>cp.lat) yMin=cp.lat; else if (yMax<cp.lat) yMax=cp.lat;
         }
     }
+    if (xMax==xMin && yMax==yMin)
+      return null;
     double minmax[]={xMin,yMin,xMax,yMax};
     return minmax;
   }

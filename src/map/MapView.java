@@ -32,10 +32,20 @@ public class MapView extends JPanel {
   public void setConflict(Conflict conflict) {
     this.conflict = conflict;
     if (conflict!=null && conflict.flights!=null && conflict.flights.length>=2) {
-      double b[]=conflict.getGeoBoundaries();
+      double b[]=conflict.getConflictGeoBoundaries();
       if (b==null)
         metrics.setTerritoryBounds(Double.NaN,Double.NaN,Double.NaN,Double.NaN);
       else {
+        /**/
+        double bp[]=conflict.getProjectionGeoBoundaries();
+        if (bp!=null) {
+          double maxDiff=Math.max(b[2]-b[0],b[3]-b[1])/4;
+          if (bp[0]<b[0]) b[0]=Math.max(bp[0],b[0]-maxDiff);
+          if (bp[1]<b[1]) b[1]=Math.max(bp[1],b[1]-maxDiff);
+          if (bp[2]>b[2]) b[2]=Math.min(bp[2],b[2]+maxDiff);
+          if (bp[3]>b[3]) b[3]=Math.min(bp[3],b[3]+maxDiff);
+        }
+        /**/
         double dx=(b[2]-b[0])/3, dy=(b[3]-b[1])/3;
         metrics.setTerritoryBounds(b[0]-dx, b[1]-dy, b[2]+dx, b[3]+dy);
       }
@@ -128,35 +138,41 @@ public class MapView extends JPanel {
       g.drawLine(x1,y1,x2,y2);
       x01=x1; y01=y1; x02=x2; y02=y2;
     }
-    g.setStroke(stroke);
     
     if (f1.pp!=null) {
-      g.setColor(colorF1);
+      g.setColor(textColorF1);
       int x0=0,y0=0;
       for (int i=0; i<f1.pp.length; i++) {
         int x=metrics.scrX(f1.pp[i].lon), y=metrics.scrY(f1.pp[i].lat);
         //g.drawLine(x-3,y-3,x+3,y+3);
         //g.drawLine(x-3,y+3,x+3,y-3);
+        g.setStroke(stroke);
         g.drawRect(x-3,y-3,6,6);
-        if (i>0)
-          g.drawLine(x0,y0,x,y);
+        if (i>0) {
+          g.setStroke(dashedStroke);
+          g.drawLine(x0, y0, x, y);
+        }
         x0=x; y0=y;
       }
     }
   
     if (f2.pp!=null) {
-      g.setColor(colorF2);
+      g.setColor(textColorF2);
       int x0=0,y0=0;
       for (int i=0; i<f2.pp.length; i++) {
         int x=metrics.scrX(f2.pp[i].lon), y=metrics.scrY(f2.pp[i].lat);
         //g.drawLine(x-3,y-3,x+3,y+3);
         //g.drawLine(x-3,y+3,x+3,y-3);
+        g.setStroke(stroke);
         g.drawRect(x-3,y-3,6,6);
-        if (i>0)
-          g.drawLine(x0,y0,x,y);
+        if (i>0) {
+          g.setStroke(dashedStroke);
+          g.drawLine(x0, y0, x, y);
+        }
         x0=x; y0=y;
       }
     }
+    g.setStroke(stroke);
     
     gr.drawImage(off_Image,0,0,null);
     off_Valid=true;
