@@ -135,6 +135,21 @@ public class Conflict {
     return false;
   }
   
+  
+  /**
+   * Extracts relevant projection points from the given list of all projection points
+   * @param pts - list of all projection points
+   * @param ptIds - previously constructed list of identifiers of all projection points, used for searching
+   * @return number of projection points found and attached to the flights
+   */
+  public int getProjectionPoints(ArrayList<FlightPoint> pts, ArrayList<String> ptIds) {
+    if (flights==null || pts==null || pts.isEmpty() || ptIds==null || ptIds.isEmpty())
+      return 0;
+    int n=0;
+    for (int i=0; i<flights.length; i++)
+      n+=flights[i].getProjectionPoints(pts,ptIds);
+    return n;
+  }
   /**
    * @return 4 coordinates: min longitude, min latitude, max longitude, max latitude
    */
@@ -155,6 +170,12 @@ public class Conflict {
         if (xMin>cp.lon) xMin=cp.lon; else if (xMax<cp.lon) xMax=cp.lon;
         if (yMin>cp.lat) yMin=cp.lat; else if (yMax<cp.lat) yMax=cp.lat;
       }
+      if (flights[i].pp!=null)
+        for (int j=0; j<flights[i].pp.length; j++) {
+          FlightPoint cp=flights[i].pp[j];
+          if (xMin>cp.lon) xMin=cp.lon; else if (xMax<cp.lon) xMax=cp.lon;
+          if (yMin>cp.lat) yMin=cp.lat; else if (yMax<cp.lat) yMax=cp.lat;
+        }
     }
     double minmax[]={xMin,yMin,xMax,yMax};
     return minmax;
@@ -196,5 +217,17 @@ public class Conflict {
             maxD = f.crossing.vDistance;
         }
     return maxD;
+  }
+  
+  public static int attachProjectionPoints(ArrayList<Conflict> conflicts, ArrayList<FlightPoint> pts) {
+    if (conflicts==null || conflicts.isEmpty() || pts==null || pts.isEmpty())
+      return 0;
+    ArrayList<String> ptIds=new ArrayList<String>(pts.size());
+    for (int i=0; i<pts.size(); i++)
+      ptIds.add(pts.get(i).projId);
+    int n=0;
+    for (int i=0; i<conflicts.size(); i++)
+      n+=conflicts.get(i).getProjectionPoints(pts,ptIds);
+    return n;
   }
 }

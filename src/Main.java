@@ -1,8 +1,5 @@
 import Util.CsvReader;
-import data.Action;
-import data.Conflict;
-import data.DataReader;
-import data.DataUpdater;
+import data.*;
 import ui.ShowConflicts;
 
 import java.util.ArrayList;
@@ -31,6 +28,8 @@ public class Main {
       int nOk=DataReader.getMoreConflictDataFromConflicts(csvReader,conflicts);
       System.out.println("Successfully identified conflicts and flights for "+nOk+" records");
   
+      ShowConflicts showConflicts=null;
+  
       csvReader=new CsvReader(path,"resolution_actions_episode_1.csv");
       ArrayList<Action> actions=DataReader.getActions(csvReader);
       if (actions==null)
@@ -45,9 +44,20 @@ public class Main {
         System.out.println("Got "+nPortions+" data portions!");
         
         if (nPortions>=0) {
-          ShowConflicts showConflicts = new ShowConflicts();
+          showConflicts = new ShowConflicts();
           showConflicts.setDataPortions(du.portions);
         }
+      }
+      if (showConflicts!=null) {
+        csvReader=new CsvReader(path,"points_of_projection.csv");
+        ArrayList<FlightPoint> pts=DataReader.getProjectionPoints(csvReader);
+        if (pts!=null) {
+          System.out.println("Got " + pts.size() + " projection points!");
+          nOk=Conflict.attachProjectionPoints(conflicts,pts);
+          System.out.println(nOk+" projection points have been attached to conflict descriptions");
+        }
+        else
+          System.out.println("Failed to load projection points!");
       }
     }
       

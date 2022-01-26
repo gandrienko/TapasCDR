@@ -1,5 +1,7 @@
 package data;
 
+import java.util.ArrayList;
+
 /**
  * Contains information about one flight involved in a conflict
  */
@@ -69,6 +71,10 @@ public class FlightInConflict {
    */
   public String projectionId=null;
   /**
+   * Projection points taken from points_of_projection.csv
+   */
+  public FlightPoint pp[]=null;
+  /**
    * Points describing the fragment of the flight trajectory that is in conflict
    */
   public ConflictPoint closest=null, first=null, last=null, crossing=null;
@@ -78,5 +84,26 @@ public class FlightInConflict {
       if (sValue.equalsIgnoreCase(phaseStrings[k]))
         return k+1;
     return 0;
+  }
+  
+  /**
+   * Extracts relevant projection points from the given list of all projection points
+   * @param pts - list of all projection points
+   * @param ptIds - previously constructed list of identifiers of all projection points, used for searching
+   * @return number of projection points found and attached to this record
+   */
+  public int getProjectionPoints(ArrayList<FlightPoint> pts, ArrayList<String> ptIds) {
+    if (pp!=null || projectionId==null ||
+            pts==null || pts.isEmpty() || ptIds==null || ptIds.isEmpty())
+      return 0;
+    int i1=ptIds.indexOf(projectionId);
+    if (i1<0)
+      return 0;
+    int i2;
+    for (i2=i1+1; i2<ptIds.size() && projectionId.equals(ptIds.get(i2)); i2++);
+    pp=new FlightPoint[i2-i1];
+    for (int i=i1; i<i2; i++)
+      pp[i-i1]=pts.get(i);
+    return pp.length;
   }
 }

@@ -298,4 +298,41 @@ public class DataReader {
       return null;
     return actions;
   }
+  
+  public static ArrayList<FlightPoint> getProjectionPoints(CsvReader data) {
+    if (data==null || data.columns==null || data.rows==null || data.rows.isEmpty())
+      return null;
+    ArrayList<FlightPoint> pts=new ArrayList<FlightPoint>(300);
+    for (int r=0; r<data.getNRows(); r++) {
+      FlightPoint p=new FlightPoint();
+      for (int c=0; c<data.getNColumns(); c++) {
+        String colName=data.columns[c], sValue=data.getValue(r,c);
+        if (sValue==null || sValue.equalsIgnoreCase("null"))
+          continue;
+        if (colName.equalsIgnoreCase("projection_ID")) p.projId=sValue; else
+        if (colName.equalsIgnoreCase("TimePoint"))
+          p.projTimeUnix =Long.parseLong(sValue);
+        else
+        if (colName.equalsIgnoreCase("timestamp"))
+          p.pointTimeUnix =Long.parseLong(sValue);
+        else
+        if (colName.equalsIgnoreCase("sequence_number"))
+          p.sequenceN=Integer.parseInt(sValue);
+        else
+        if (colName.equalsIgnoreCase("lon"))
+          p.lon=Double.parseDouble(sValue);
+        else
+        if (colName.equalsIgnoreCase("lat"))
+          p.lat=Double.parseDouble(sValue);
+        else
+        if (colName.equalsIgnoreCase("alt"))
+          p.altitude=Math.round(Float.parseFloat(sValue));
+      }
+      if (p.projId!=null && p.pointTimeUnix>0 && !Double.isNaN(p.lon) && !Double.isNaN(p.lat))
+        pts.add(p);
+    }
+    if (pts.isEmpty())
+      return null;
+    return pts;
+  }
 }
