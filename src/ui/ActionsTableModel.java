@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class ActionsTableModel extends AbstractTableModel {
   public static final String colNames[]={"Flight","Action","Value","Rank",
-      "Added miles","Added time","Added conflicts",
+      "Added miles","Duration","Added conflicts",
       "H-speed change","V-speed change","Course change",
       "H-shift at exit","V-shift at exit","Bearing",
       "Why not"
@@ -24,7 +24,7 @@ public class ActionsTableModel extends AbstractTableModel {
   }
   public Class getColumnClass(int c) {
     if (colNames[c].equals("Value") || colNames[c].equals("Rank") ||
-            colNames[c].equals("Added time") || colNames[c].equals("Added conflicts"))
+            colNames[c].equals("Duration") || colNames[c].equals("Added conflicts"))
       return Integer.class;
     if (colNames[c].startsWith("H-") || colNames[c].startsWith("V-") ||
             colNames[c].startsWith("Course") || colNames[c].equals("Bearing") ||
@@ -53,7 +53,7 @@ public class ActionsTableModel extends AbstractTableModel {
       return a.rank;
     if (cName.equals("Added miles"))
       return (Double.isNaN(a.addMiles))?null:a.addMiles;
-    if (cName.equals("Added time"))
+    if (cName.equals("Duration"))
       return a.addTime;
     if (cName.equals("Added conflicts"))
       return (a.conflicts==null)?0:a.conflicts.size();
