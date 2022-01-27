@@ -6,9 +6,12 @@ import data.FlightInConflict;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 
-public class MapView extends JPanel {
+public class MapView extends JPanel implements MouseListener, MouseMotionListener {
   public static final Color colorF1=new Color(128,0,0), colorF2=new Color(0,0,128),
       paleColorF1 =new Color(255,0,0,128), paleColorF2 =new Color(0,0,255,128),
       textColorF1=new Color(96,0,0,128), textColorF2=new Color(0,0,96,128);
@@ -21,6 +24,10 @@ public class MapView extends JPanel {
    */
   public MapMetrics metrics=new MapMetrics();
   /**
+   * Original visible territory
+   */
+  public double visibleTerrBounds[]=null;
+  /**
    * Specification of the conflict to be shown
    */
   public Conflict conflict=null;
@@ -29,6 +36,12 @@ public class MapView extends JPanel {
    */
   protected BufferedImage off_Image=null;
   protected boolean off_Valid=false;
+  
+  public MapView(){
+    super();
+    addMouseListener(this);
+    addMouseMotionListener(this);
+  }
   
   public void setConflict(Conflict conflict) {
     this.conflict = conflict;
@@ -53,8 +66,8 @@ public class MapView extends JPanel {
     }
     else
       metrics.setTerritoryBounds(Double.NaN,Double.NaN,Double.NaN,Double.NaN);
-    off_Valid=false;
-    redraw();
+    visibleTerrBounds=null;
+    redraw(true);
   }
   
   public void paintComponent(Graphics gr) {
@@ -180,8 +193,96 @@ public class MapView extends JPanel {
     off_Valid=true;
   }
   
-  public void redraw(){
+  public void redraw(boolean invalidate){
+    if (invalidate)
+      off_Valid=false;
     if (isShowing())
       paintComponent(getGraphics());
   }
+  
+  public void shiftBy(int dx, int dy) {
+    if (dx==0 && dy==0)
+      return;
+    if (metrics==null || !metrics.hasTerritoryBounds())
+      return;
+    if (visibleTerrBounds==null)
+      visibleTerrBounds=metrics.getVisibleTerritoryBounds();
+    double ddx=dx*metrics.step, ddy=dy*metrics.stepY;
+    double b[]=metrics.getVisibleTerritoryBounds();
+    metrics.setTerritoryBounds(b[0]-ddx,b[1]+ddy,b[2]-ddx,b[3]+ddy);
+    redraw(true);
+  }
+  
+  
+  protected int x0 =-1, y0 =-1;
+  boolean isDragging=false;
+  
+  public void mousePressed(MouseEvent e) {
+    if (metrics==null || !metrics.hasTerritoryBounds())
+      return;
+    if (e.getButton()==MouseEvent.BUTTON1){
+      x0 =e.getX(); y0 =e.getY();
+    }
+  }
+  
+  public void mouseReleased(MouseEvent e) {
+    if (metrics==null || !metrics.hasTerritoryBounds())
+      return;
+    if (isDragging) {
+      int dragX=e.getX(), dragY=e.getY();
+      int dx=dragX-x0, dy=dragY-y0;
+      if (Math.abs(dx)>0 || Math.abs(dy)>0)
+        shiftBy(dx,dy);
+    }
+    x0 = y0 =-1;
+    isDragging=false;
+  }
+  
+  public void mouseClicked(MouseEvent e) {
+    if (metrics==null || !metrics.hasTerritoryBounds())
+      return;
+    if (e.getClickCount() > 1) {
+      // restore the original view
+      if (visibleTerrBounds!=null) {
+        metrics.setTerritoryBounds(visibleTerrBounds);
+        redraw(true);
+      }
+    }
+    else
+    if (e.getButton()==MouseEvent.BUTTON1){
+      if (visibleTerrBounds==null)
+        visibleTerrBounds=metrics.getVisibleTerritoryBounds();
+      //zoom in
+      double b[]=metrics.getVisibleTerritoryBounds();
+      double dx=(b[2]-b[0])/10, dy=(b[3]-b[1])/10;
+      metrics.setTerritoryBounds(b[0]+dx,b[1]+dy,b[2]-dx,b[3]-dy);
+      redraw(true);
+    }
+    else {
+      if (visibleTerrBounds==null)
+        visibleTerrBounds=metrics.getVisibleTerritoryBounds();
+      //zoom out
+      double b[]=metrics.getVisibleTerritoryBounds();
+      double dx=(b[2]-b[0])/8, dy=(b[3]-b[1])/8;
+      metrics.setTerritoryBounds(b[0]-dx,b[1]-dy,b[2]+dx,b[3]+dy);
+      redraw(true);
+    }
+  }
+  public void mouseDragged(MouseEvent e) {
+    if (metrics==null || !metrics.hasTerritoryBounds())
+      return;
+    if (x0 >=0 && y0 >=0){
+      isDragging=true;
+      int dragX=e.getX(), dragY=e.getY();
+      int dx=dragX-x0, dy=dragY-y0;
+      if (Math.abs(dx)>=5 || Math.abs(dy)>=5) {
+        x0=dragX; y0=dragY;
+        shiftBy(dx,dy);
+      }
+    }
+  }
+  
+  public void mouseEntered(MouseEvent e) {};
+  public void mouseExited(MouseEvent e) {};
+  public void mouseMoved(MouseEvent e) {}
 }

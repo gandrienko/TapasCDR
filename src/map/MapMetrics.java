@@ -48,9 +48,24 @@ public class MapMetrics {
     setup();
   }
   
+  public void setTerritoryBounds(double b[]) {
+    if (b!=null)
+      setTerritoryBounds(b[0],b[1],b[2],b[3]);
+    else
+      setTerritoryBounds(Double.NaN,Double.NaN,Double.NaN,Double.NaN);
+  }
+  
   public boolean hasTerritoryBounds(){
     return !Double.isNaN(tx1) && !Double.isNaN(ty1) && !Double.isNaN(tx2) && !Double.isNaN(ty2) &&
                tx2 >= tx1 && ty2 >= ty1 && (tx2 > tx1 || ty2 > ty1);
+  }
+  
+  public double[] getVisibleTerritoryBounds() {
+    if (viewport==null || !hasTerritoryBounds())
+      return null;
+    double b[]={absX(viewport.x),absY(viewport.y+viewport.height),
+        absX(viewport.x+viewport.width),absY(viewport.y)};
+    return b;
   }
   /**
    * Sets the rectangle within some window on the screen in which the map must be drawn
