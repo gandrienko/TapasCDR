@@ -16,6 +16,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener{
+  public static final String versionText="TAPAS CDR UI version 27/01/2022 16:00";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -99,7 +100,8 @@ public class ShowConflicts implements ItemListener{
     }
     
     LocalDateTime dt=conflicts.get(0).detectionTime;
-    String frameTitle=String.format("Conflicts detected %02d/%02d/%04d at %02d:%02d:%02d",
+    String frameTitle=String.format("%s; Conflicts detected %02d/%02d/%04d at %02d:%02d:%02d",
+        versionText,
         dt.getDayOfMonth(),dt.getMonthValue(),dt.getYear(),dt.getHour(),dt.getMinute(),dt.getSecond());
     
     if (mainFrame!=null)
@@ -170,7 +172,7 @@ public class ShowConflicts implements ItemListener{
           @Override
           public void windowClosing(WindowEvent e) {
             if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
-                "Sure to exitt?",
+                "Sure to exit?",
                 "Sure to exit?",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE)
                 ==JOptionPane.YES_OPTION)
               System.exit(0);
