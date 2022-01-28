@@ -5,7 +5,8 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 
 public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer {
-  public double min=0,max=0, value =0;
+  public double min=0, max=0, value =0;
+  public double lowLimit=Double.NaN;
   public int precision=-1;
   
   public NumberByBarCellRenderer(double min, double max) {
@@ -20,28 +21,39 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
     this.precision = precision;
   }
   
+  public void setLowLimit(double lowLimit) {
+    this.lowLimit = lowLimit;
+  }
+  
   public void paintComponent (Graphics g) {
     g.setColor(getBackground());
     g.fillRect(0,0,getWidth(),getHeight());
     if (min<max && !Double.isNaN(value)) {
-      g.setColor(Color.lightGray);
-      if (min >= 0)
-        g.fillRect(0, 2, (int) Math.round(getWidth() * (value - min) / (max - min)), getHeight() - 4);
-      else
-        if (max <= 0) {
-          int dw = (int) Math.round(getWidth() * (max - value) / (max - min));
-          g.fillRect(getWidth() - dw, 2, dw, getHeight() - 4);
-        }
-        else { // min<=0, max>=0
-          int xZero = (int) Math.round(getWidth() * (0 - min) / (max - min));
-          if (value > 0) {
-            g.fillRect(xZero, 2, (int) Math.round((getWidth() - xZero) * (value - 0) / (max - 0)), getHeight() - 4);
+      if (Double.isNaN(lowLimit) || value>=lowLimit || lowLimit<=min) {
+        g.setColor(Color.lightGray);
+        if (min >= 0)
+          g.fillRect(0, 2, (int) Math.round(getWidth() * (value - min) / (max - min)), getHeight() - 4);
+        else
+          if (max <= 0) {
+            int dw = (int) Math.round(getWidth() * (max - value) / (max - min));
+            g.fillRect(getWidth() - dw, 2, dw, getHeight() - 4);
           }
-          else {
-            int dw = (int) Math.round(xZero * (0 - value) / (0 - min));
-            g.fillRect(xZero - dw, 2, dw, getHeight() - 4);
+          else { // min<=0, max>=0
+            int xZero = (int) Math.round(getWidth() * (0 - min) / (max - min));
+            if (value > 0) {
+              g.fillRect(xZero, 2, (int) Math.round((getWidth() - xZero) * (value - 0) / (max - 0)), getHeight() - 4);
+            }
+            else {
+              int dw = (int) Math.round(xZero * (0 - value) / (0 - min));
+              g.fillRect(xZero - dw, 2, dw, getHeight() - 4);
+            }
           }
-        }
+      }
+      else {
+        double ratio=1.0-(value-min)/(lowLimit-min);
+        g.setColor(new Color((int)Math.round(ratio*255),0,0,25+(int)Math.round(ratio*125)));
+        g.fillRect(0,2,(int)Math.round(ratio*getWidth()),getHeight()-4);
+      }
     }
     super.paintComponent(g);
   }

@@ -16,7 +16,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener{
-  public static final String versionText="TAPAS CDR UI version 27/01/2022 16:00";
+  public static final String versionText="TAPAS CDR UI version 28/01/2022 17:30";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -114,13 +114,24 @@ public class ShowConflicts implements ItemListener{
       TimeCellRenderer timeRenderer=new TimeCellRenderer();
       for (int i=0; i<cTableModel.getColumnCount(); i++) {
         String cName=cTableModel.getColumnName(i);
-        if (cName.startsWith("Hor") || cName.startsWith("Vert")) {
-          NumberByBarCellRenderer bRend= new NumberByBarCellRenderer(0,
-              (cName.startsWith("Hor"))?Conflict.getMaxHorDistance(conflicts):
-                                        Conflict.getMaxVertDistance(conflicts));
-          bRend.setPrecision(0);
+        NumberByBarCellRenderer hDRend=new NumberByBarCellRenderer(0,Conflict.getMaxHorDistance(conflicts)),
+            vDRend=new NumberByBarCellRenderer(0,Conflict.getMaxVertDistance(conflicts));
+        hDRend.setPrecision(2);
+        hDRend.setLowLimit(5);
+        vDRend.setPrecision(0);
+        vDRend.setLowLimit(1000);
+        if (cName.contains("MOC") || cName.toLowerCase().contains("compliance")) {
+          NumberByBarCellRenderer bRend= new NumberByBarCellRenderer(0,100);
+          bRend.setPrecision(2);
+          bRend.setLowLimit(100);
           cTable.getColumnModel().getColumn(i).setCellRenderer(bRend);
         }
+        else
+        if (cName.startsWith("Hor"))
+          cTable.getColumnModel().getColumn(i).setCellRenderer(hDRend);
+        else
+        if (cName.startsWith("Vert"))
+          cTable.getColumnModel().getColumn(i).setCellRenderer(vDRend);
         else
         if (cTableModel.getColumnClass(i).equals(String.class))
           cTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);

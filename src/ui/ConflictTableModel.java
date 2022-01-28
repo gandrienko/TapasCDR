@@ -12,6 +12,7 @@ import java.util.ArrayList;
 public class ConflictTableModel  extends AbstractTableModel {
   public static final String colNames[]={"N","Type","Flight 1","Flight 2",
       "Detected at","Start time","CPA time","End time",
+      "Compliance (MOC)",
       "HorD at start","HorD at CPA","HorD at end",
       "VertD at start","VertD at CPA","VertD at end",
       "Is primary?"
@@ -36,6 +37,9 @@ public class ConflictTableModel  extends AbstractTableModel {
       return Double.class;
     if (colNames[c].contains("primary"))
       return Boolean.class;
+    if (colNames[c].contains("MOC") ||
+            colNames[c].toLowerCase().contains("compliance"))
+      return Double.class;
     return String.class;
   }
   public int getRowCount() {
@@ -50,6 +54,9 @@ public class ConflictTableModel  extends AbstractTableModel {
     if (col==0)
       return row+1;
     Conflict c=conflicts.get(row);
+    if (colNames[col].contains("MOC") ||
+            colNames[col].toLowerCase().contains("compliance"))
+      return c.getComplianceMeasure();
     if (colNames[col].equals("Type"))
       return c.type;
     if (colNames[col].equals("Is primary?"))

@@ -221,8 +221,10 @@ public class DataReader {
           if (colName.endsWith("_alt"))
             cp.altitude=Math.round(Float.parseFloat(sValue));
           else
-          if (colName.startsWith("h_distance_") || colName.startsWith("d_h_"))
-            cp.hDistance=Double.parseDouble(sValue);
+          if (colName.startsWith("h_distance_") || colName.startsWith("d_h_")) {
+            cp.hDistMetr = Double.parseDouble(sValue);
+            cp.hDistance=cp.hDistMetr/1852;
+          }
           else
           if (colName.startsWith("v_distance_") || colName.startsWith("d_v_"))
             cp.vDistance=Math.round(Float.parseFloat(sValue));

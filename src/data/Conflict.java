@@ -56,6 +56,24 @@ public class Conflict {
    */
   public FlightInConflict flights[]=null;
   /**
+   * The Measure Of Compliance (MOC), which is the biggest distance apart (expressed as a %)
+   *
+   * For example two flights that have 0NM separation (lateral) but 950ft vertical are separated
+   * by 950ft which is usually within an acceptable tolerance for most places using 1000ft vertical
+   * - the MOC in this case would be 95% (not Zero).
+   *
+   * Similarly two flights that are only 3NM apart (lateral) with 5NM required and 300 Feet vertical
+   * have 60% MOC in the lateral and only 30% in vertical BUT the actual MOC is 60% not 30% since
+   * this is the furthest distance apart.
+   *
+   * Expressed another way - two flights with 0NM separation lateral but 1000ft vertical are
+   * not in conflict. Also two flights with 5NM lateral but 0ft vertical are also separated.
+   *
+   * For a flight involved in a conflict, the MOC is the minimum of the MOCs of the
+   * specified conflict points.
+   */
+  public double measureOfCompliance=Double.NaN;
+  /**
    * Whether the conflict is primary (= true) or
    * it has emerged due to a previous conflict resolution action (= false).
    */
@@ -88,6 +106,35 @@ public class Conflict {
       if (sValue.equalsIgnoreCase(typeStrings[k]))
         return k+1;
     return 0;
+  }
+  
+  /**
+   * Computes the Measure Of Compliance (MOC), which is the biggest distance apart (expressed as a %)
+   *
+   * For example two flights that have 0NM separation (lateral) but 950ft vertical are separated
+   * by 950ft which is usually within an acceptable tolerance for most places using 1000ft vertical
+   * - the MOC in this case would be 95% (not Zero).
+   *
+   * Similarly two flights that are only 3NM apart (lateral) with 5NM required and 300 Feet vertical
+   * have 60% MOC in the lateral and only 30% in vertical BUT the actual MOC is 60% not 30% since
+   * this is the furthest distance apart.
+   *
+   * Expressed another way - two flights with 0NM separation lateral but 1000ft vertical are
+   * not in conflict. Also two flights with 5NM lateral but 0ft vertical are also separated.
+   *
+   * @return the Measure Of Compliance (MOC)
+   */
+  public double getComplianceMeasure () {
+    if (!Double.isNaN(measureOfCompliance))
+      return measureOfCompliance;
+    if (flights==null)
+      return Double.NaN;
+    for (int i=0; i<flights.length; i++) {
+      double c=flights[i].getComplianceMeasure();
+      if (!Double.isNaN(c) && (Double.isNaN(measureOfCompliance) || measureOfCompliance>c))
+        measureOfCompliance=c;
+    }
+    return measureOfCompliance;
   }
   
   public String toString() {

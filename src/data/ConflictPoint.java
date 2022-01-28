@@ -9,6 +9,10 @@ import java.time.LocalDateTime;
 
 public class ConflictPoint {
   /**
+   * Minimal required horizontal (in nm) and vertical (in feet) separation
+   */
+  public static final double HD_MIN=5, VD_MIN=1000;
+  /**
    * Kind of point: CPA (closest point of approach), first point (where the conflict begins),
    * last point (where the conflict ends), or crossing point
    */
@@ -57,9 +61,9 @@ public class ConflictPoint {
    *       "h_distance_at_first_conflict",
    *       "h_distance_at_last_conflict",
    *       "d_h_cp"
-   * Horizontal distance, in metres
+   * Horizontal distance, in nautical miles and in metres
    */
-  public double hDistance=Double.NaN;
+  public double hDistance=Double.NaN, hDistMetr=Double.NaN;
   /**
    * conflicts.csv: "v_distance_at_conflict",
    *       "v_distance_at_first_conflict",
@@ -68,11 +72,44 @@ public class ConflictPoint {
    *  Vertical distance, in feet
    */
   public int vDistance=0;
+  /**
+   * The Measure Of Compliance (MOC), which is the biggest distance apart (expressed as a %)
+   *
+   * For example two flights that have 0NM separation (lateral) but 950ft vertical are separated
+   * by 950ft which is usually within an acceptable tolerance for most places using 1000ft vertical
+   * - the MOC in this case would be 95% (not Zero).
+   *
+   * Similarly two flights that are only 3NM apart (lateral) with 5NM required and 300 Feet vertical
+   * have 60% MOC in the lateral and only 30% in vertical BUT the actual MOC is 60% not 30% since
+   * this is the furthest distance apart.
+   *
+   * Expressed another way - two flights with 0NM separation lateral but 1000ft vertical are
+   * not in conflict. Also two flights with 5NM lateral but 0ft vertical are also separated.
+   */
+  public double measureOfCompliance=Double.NaN;
   
   public ConflictPoint() {}
   
   public ConflictPoint(String flightId, int kind) {
     this.flightId=flightId;
     this.kind=kind;
+  }
+  
+  /**
+   * Computes the Measure Of Compliance (MOC), which is the biggest distance apart (expressed as a %)
+   * @return the Measure Of Compliance (MOC)
+   */
+  public double getComplianceMeasure () {
+    if (!Double.isNaN(measureOfCompliance))
+      return measureOfCompliance;
+    if (Double.isNaN(hDistance) || Double.isNaN(vDistance))
+      return Double.NaN;
+    double hc=100, vc=100;
+    if (hDistance<HD_MIN)
+      hc=hDistance/HD_MIN*100;
+    if (vDistance<VD_MIN)
+      vc=vDistance/VD_MIN*100;
+    measureOfCompliance=Math.max(hc,vc);
+    return measureOfCompliance;
   }
 }
