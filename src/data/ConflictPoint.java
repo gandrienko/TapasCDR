@@ -87,6 +87,11 @@ public class ConflictPoint {
    * not in conflict. Also two flights with 5NM lateral but 0ft vertical are also separated.
    */
   public double measureOfCompliance=Double.NaN;
+  /**
+   * Whether the MOC is determined by the horizontal distance ('H'), vertical distance ('V'),
+   * both ('B'), or none of them ('N').
+   */
+  public char mocDueTo='N';
   
   public ConflictPoint() {}
   
@@ -102,6 +107,7 @@ public class ConflictPoint {
   public double getComplianceMeasure () {
     if (!Double.isNaN(measureOfCompliance))
       return measureOfCompliance;
+    mocDueTo='N';
     if (Double.isNaN(hDistance) || Double.isNaN(vDistance))
       return Double.NaN;
     double hc=100, vc=100;
@@ -110,6 +116,19 @@ public class ConflictPoint {
     if (vDistance<VD_MIN)
       vc=vDistance/VD_MIN*100;
     measureOfCompliance=Math.max(hc,vc);
+    if (measureOfCompliance<100)
+      mocDueTo=(hc>vc)?'H':(hc==vc)?'B':'V';
     return measureOfCompliance;
+  }
+  
+  /**
+   * Informs whether the MOC is determined by the horizontal distance ('H'), vertical distance ('V'),
+   * both ('B'), or none of them ('N').
+   * @return 'H', 'V', 'B', or 'N'
+   */
+  public char getMOC_DueTo() {
+    if (Double.isNaN(measureOfCompliance))
+      getComplianceMeasure();
+    return mocDueTo;
   }
 }

@@ -1,5 +1,7 @@
 package table_cells;
 
+import ui.ConflictTableModel;
+
 import javax.swing.*;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
@@ -7,7 +9,10 @@ import java.awt.*;
 public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer {
   public double min=0, max=0, value =0;
   public double lowLimit=Double.NaN;
+  public boolean toShowDistanceToLowLimit=true;
   public int precision=-1;
+  public String unit="";
+  public ConflictTableModel conflictTableModel=null;
   
   public NumberByBarCellRenderer(double min, double max) {
     super("", JLabel.RIGHT);
@@ -25,11 +30,15 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
     this.lowLimit = lowLimit;
   }
   
+  public void setUnit(String unit) {
+    this.unit = unit;
+  }
+  
   public void paintComponent (Graphics g) {
     g.setColor(getBackground());
     g.fillRect(0,0,getWidth(),getHeight());
     if (min<max && !Double.isNaN(value)) {
-      if (Double.isNaN(lowLimit) || value>=lowLimit || lowLimit<=min) {
+      if (!toShowDistanceToLowLimit || Double.isNaN(lowLimit) || value>=lowLimit || lowLimit<=min) {
         g.setColor(Color.lightGray);
         if (min >= 0)
           g.fillRect(0, 2, (int) Math.round(getWidth() * (value - min) / (max - min)), getHeight() - 4);
@@ -86,12 +95,14 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
     }
     if (value!=null) {
       if (value instanceof Integer)
-        setText(String.format("%d",value));
+        setText(String.format("%d%s",value,unit));
       else
       if (precision<0)
-        setText(value.toString());
+        setText(value.toString()+unit);
       else
-        setText(String.format("%."+precision+"f",value));
+        setText(String.format("%."+precision+"f%s",value,unit));
+      if (!Double.isNaN(lowLimit) && this.value<lowLimit && conflictTableModel!=null)
+        toShowDistanceToLowLimit=conflictTableModel.isDistanceToLowLimitImportant(row,column);
     }
     if (isSelected)
       setBackground(table.getSelectionBackground());

@@ -50,6 +50,7 @@ public class ConflictTableModel  extends AbstractTableModel {
   public int getColumnCount() {
     return colNames.length;
   }
+  
   public Object getValueAt(int row, int col) {
     if (col==0)
       return row+1;
@@ -80,6 +81,25 @@ public class ConflictTableModel  extends AbstractTableModel {
     if (colNames[col].startsWith("Vert"))
       return cp.vDistance;
     return null;
+  }
+  
+  public boolean isDistanceToLowLimitImportant(int row, int col) {
+    if (colNames[col].contains("MOC") ||
+            colNames[col].toLowerCase().contains("compliance"))
+      return true;
+    if (!colNames[col].startsWith("Hor") && !colNames[col].startsWith("Vert"))
+      return false;
+    Conflict c=conflicts.get(row);
+    FlightInConflict f=c.flights[0];
+    ConflictPoint cp=(colNames[col].contains("CPA"))?f.closest:
+                         (colNames[col].toLowerCase().contains("start"))?f.first:
+                             (colNames[col].toLowerCase().contains("end"))?f.last:null;
+    char dueTo=cp.getMOC_DueTo();
+    if (dueTo=='B')
+      return true;
+    if (colNames[col].startsWith("Hor"))
+      return dueTo=='H';
+    return dueTo=='V';
   }
   
   public int getPreferredColumnWidth(int col) {

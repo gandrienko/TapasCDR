@@ -1,6 +1,7 @@
 package ui;
 
 import data.Conflict;
+import data.ConflictPoint;
 import data.DataPortion;
 import map.AltiView;
 import map.MapView;
@@ -16,7 +17,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener{
-  public static final String versionText="TAPAS CDR UI version 28/01/2022 17:30";
+  public static final String versionText="TAPAS CDR UI version 318/01/2022 16:50";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -117,13 +118,17 @@ public class ShowConflicts implements ItemListener{
         NumberByBarCellRenderer hDRend=new NumberByBarCellRenderer(0,Conflict.getMaxHorDistance(conflicts)),
             vDRend=new NumberByBarCellRenderer(0,Conflict.getMaxVertDistance(conflicts));
         hDRend.setPrecision(2);
-        hDRend.setLowLimit(5);
+        hDRend.setLowLimit(ConflictPoint.HD_MIN);
+        hDRend.conflictTableModel=cTableModel;
         vDRend.setPrecision(0);
-        vDRend.setLowLimit(1000);
+        vDRend.setLowLimit(ConflictPoint.VD_MIN);
+        vDRend.conflictTableModel=cTableModel;
         if (cName.contains("MOC") || cName.toLowerCase().contains("compliance")) {
           NumberByBarCellRenderer bRend= new NumberByBarCellRenderer(0,100);
           bRend.setPrecision(2);
           bRend.setLowLimit(100);
+          bRend.setUnit("%");
+          bRend.conflictTableModel=cTableModel;
           cTable.getColumnModel().getColumn(i).setCellRenderer(bRend);
         }
         else
