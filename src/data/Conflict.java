@@ -56,6 +56,33 @@ public class Conflict {
    */
   public FlightInConflict flights[]=null;
   /**
+   * Relative horizontal speed, knots per minute
+   */
+  public double relSpeedH=Double.NaN;
+  /**
+   * Intervals of the rate of horizontal closure:
+   * 0 (NONE)   : relSpeedH <= 0
+   * 1 (lOW)    : 0 < relSpeedH <= 85
+   * 2 (MEDIUM) : 85 < relSpeedH <= 205
+   * 4 (HIGH)   : 205 < relSpeedH <= 700
+   * 5 (VERY HIGH) : 700 < relSpeedH
+   */
+  public int rateOfClosureH=0;
+  /**
+   * Relative vertical speed, feet per minute
+   */
+  public double relSpeedV=Double.NaN;
+  /**
+   * Intervals of the rate of vertical closure:
+   * 0 (NONE)   : relSpeedV <= 0
+   * 1 (lOW)    : 0 < relSpeedV <= 1000
+   * 2 (MEDIUM) : 1000 < relSpeedV <= 2000
+   * 4 (HIGH)   : 2000 < relSpeedV <= 4000
+   * 5 (VERY HIGH) : 4000 < relSpeedV
+   */
+  public int rateOfClosureV=0;
+  
+  /**
    * The Measure Of Compliance (MOC), which is the biggest distance apart (expressed as a %)
    *
    * For example two flights that have 0NM separation (lateral) but 950ft vertical are separated
@@ -73,6 +100,17 @@ public class Conflict {
    * specified conflict points.
    */
   public double measureOfCompliance=Double.NaN;
+  /**
+   * Severity, computed as a weighted sum of the measure of compliance (MoC) and rate of closure (RoC)
+   * Weights: 20 for separation according to the MoC and 10 for RoC
+   * Separation intervals according to MoC and their values:
+   * 0: 100% <= MoC
+   * 1: 75% < MoC < 100%
+   * 3: 50% < MoC <= 75%
+   * 7: 25% < MoC <=50%
+   * 10: MoC <=25%
+   */
+  public double severity=Double.NaN;
   /**
    * Whether the conflict is primary (= true) or
    * it has emerged due to a previous conflict resolution action (= false).
@@ -135,6 +173,55 @@ public class Conflict {
         measureOfCompliance=c;
     }
     return measureOfCompliance;
+  }
+  /**
+   * Computes severity as a weighted sum of the measure of compliance (MoC) and rate of closure (RoC)
+   * Weights: 20 for separation according to the MoC and 10 for RoC
+   * Separation intervals according to MoC and their values:
+   * 0: 100% <= MoC
+   * 1: 75% < MoC < 100%
+   * 3: 50% < MoC <= 75%
+   * 7: 25% < MoC <=50%
+   * 10: MoC <=25%
+   * Intervals of the rate of horizontal closure:
+   * 0 (NONE)   : relSpeedH <= 0
+   * 1 (lOW)    : 0 < relSpeedH <= 85
+   * 2 (MEDIUM) : 85 < relSpeedH <= 205
+   * 4 (HIGH)   : 205 < relSpeedH <= 700
+   * 5 (VERY HIGH) : 700 < relSpeedH
+   * Intervals of the rate of vertical closure:
+   * 0 (NONE)   : relSpeedV <= 0
+   * 1 (lOW)    : 0 < relSpeedV <= 1000
+   * 2 (MEDIUM) : 1000 < relSpeedV <= 2000
+   * 4 (HIGH)   : 2000 < relSpeedV <= 4000
+   * 5 (VERY HIGH) : 4000 < relSpeedV
+   */
+  public double getSeverity() {
+    if (!Double.isNaN(severity))
+      return severity;
+    if (flights==null)
+      return Double.NaN;
+    if (Double.isNaN(measureOfCompliance)) {
+      getComplianceMeasure();
+      if (Double.isNaN(measureOfCompliance))
+        return Double.NaN;
+    }
+    if (Double.isNaN(relSpeedH) || Double.isNaN((relSpeedV))) {
+      ConflictPoint cp = flights[0].closest, cpPrev = flights[0].first;
+      if (cp.pointTimeUnix <= cpPrev.pointTimeUnix)
+        return Double.NaN;
+      relSpeedH=(cpPrev.hDistance-cp.hDistance)/(cp.pointTimeUnix-cpPrev.pointTimeUnix)*60;
+      relSpeedH=(cpPrev.vDistance-cp.vDistance)/(cp.pointTimeUnix-cpPrev.pointTimeUnix)*60;
+      rateOfClosureH=(relSpeedH<=0)?0:(relSpeedH<=85)?1:(relSpeedH<=205)?2:(relSpeedH<=700)?4:5;
+      rateOfClosureV=(relSpeedV<=0)?0:(relSpeedV<=1000)?1:(relSpeedV<=2000)?2:(relSpeedV<=4000)?4:5;
+      int rateOfClosure=Math.max(rateOfClosureH,rateOfClosureV);
+      int rateMoC=(measureOfCompliance>=100)?
+                      0:(measureOfCompliance>75)?
+                            1:(measureOfCompliance>50)?
+                                  3:(measureOfCompliance>25)?7:10;
+      severity=20*rateMoC+10*rateOfClosure;
+    }
+    return severity;
   }
   
   public String toString() {

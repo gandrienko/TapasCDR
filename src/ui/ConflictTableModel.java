@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class ConflictTableModel  extends AbstractTableModel {
   public static final String colNames[]={"N","Type","Flight 1","Flight 2",
       "Detected at","Start time","CPA time","End time",
-      "Compliance (MOC)",
+      "Severity","Compliance (MoC)",
       "HorD at start","HorD at CPA","HorD at end",
       "VertD at start","VertD at CPA","VertD at end",
       "Is primary?"
@@ -29,16 +29,16 @@ public class ConflictTableModel  extends AbstractTableModel {
     return colNames[col];
   }
   public Class getColumnClass(int c) {
-    if (c==0 || colNames[c].contains("Vert"))
+    String cName=colNames[c].toLowerCase();
+    if (c==0 || cName.contains("vert") || cName.contains("severity"))
       return Integer.class;
-    if (colNames[c].contains("time") || colNames[c].startsWith("Detect"))
+    if (cName.contains("time") || cName.startsWith("detect"))
       return LocalDateTime.class;
-    if (colNames[c].contains("Hor"))
+    if (cName.contains("hor"))
       return Double.class;
-    if (colNames[c].contains("primary"))
+    if (cName.contains("primary"))
       return Boolean.class;
-    if (colNames[c].contains("MOC") ||
-            colNames[c].toLowerCase().contains("compliance"))
+    if (cName.contains("moc") || cName.contains("compliance"))
       return Double.class;
     return String.class;
   }
@@ -55,49 +55,51 @@ public class ConflictTableModel  extends AbstractTableModel {
     if (col==0)
       return row+1;
     Conflict c=conflicts.get(row);
-    if (colNames[col].contains("MOC") ||
-            colNames[col].toLowerCase().contains("compliance"))
+    String cName=colNames[col].toLowerCase();
+    if (cName.contains("moc") || cName.contains("compliance"))
       return c.getComplianceMeasure();
-    if (colNames[col].equals("Type"))
+    if (cName.contains("severity"))
+      return (int)Math.round(c.getSeverity());
+    if (cName.equals("type"))
       return c.type;
-    if (colNames[col].equals("Is primary?"))
+    if (cName.equals("is primary?"))
       return c.isPrimary;
-    if (colNames[col].startsWith("Detect"))
+    if (cName.startsWith("detect"))
       return c.detectionTime;
-    if (colNames[col].equals("Flight 1"))
+    if (cName.equals("flight 1"))
       return c.flights[0].flightId+" "+FlightInConflict.phaseCodes[c.flights[0].phaseNum];
-    if (colNames[col].equals("Flight 2"))
+    if (cName.equals("flight 2"))
       return c.flights[1].flightId+" "+FlightInConflict.phaseCodes[c.flights[1].phaseNum];
     FlightInConflict f=c.flights[0];
-    ConflictPoint cp=(colNames[col].contains("CPA"))?f.closest:
-                         (colNames[col].toLowerCase().contains("start"))?f.first:
-                             (colNames[col].toLowerCase().contains("end"))?f.last:null;
+    ConflictPoint cp=(cName.contains("cpa"))?f.closest:
+                         (cName.contains("start"))?f.first:
+                             (cName.contains("end"))?f.last:null;
     if (cp==null)
       return null;
-    if (colNames[col].contains("time"))
+    if (cName.contains("time"))
       return cp.time;
-    if (colNames[col].startsWith("Hor"))
+    if (cName.startsWith("hor"))
       return  cp.hDistance;
-    if (colNames[col].startsWith("Vert"))
+    if (cName.startsWith("vert"))
       return cp.vDistance;
     return null;
   }
   
   public boolean isDistanceToLowLimitImportant(int row, int col) {
-    if (colNames[col].contains("MOC") ||
-            colNames[col].toLowerCase().contains("compliance"))
+    String cName=colNames[col].toLowerCase();
+    if (cName.contains("moc") || cName.contains("compliance"))
       return true;
-    if (!colNames[col].startsWith("Hor") && !colNames[col].startsWith("Vert"))
+    if (!cName.startsWith("hor") && !cName.startsWith("vert"))
       return false;
     Conflict c=conflicts.get(row);
     FlightInConflict f=c.flights[0];
-    ConflictPoint cp=(colNames[col].contains("CPA"))?f.closest:
-                         (colNames[col].toLowerCase().contains("start"))?f.first:
-                             (colNames[col].toLowerCase().contains("end"))?f.last:null;
+    ConflictPoint cp=(cName.contains("cpa"))?f.closest:
+                         (cName.contains("start"))?f.first:
+                             (cName.contains("end"))?f.last:null;
     char dueTo=cp.getMOC_DueTo();
     if (dueTo=='B')
       return true;
-    if (colNames[col].startsWith("Hor"))
+    if (cName.startsWith("hor"))
       return dueTo=='H';
     return dueTo=='V';
   }

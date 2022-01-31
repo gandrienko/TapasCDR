@@ -60,7 +60,7 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
       }
       else {
         double ratio=1.0-(value-min)/(lowLimit-min);
-        g.setColor(new Color((int)Math.round(ratio*255),0,0,25+(int)Math.round(ratio*125)));
+        g.setColor(new Color(100+(int)Math.round(ratio*155),0,0,50+(int)Math.round(ratio*100)));
         g.fillRect(0,2,(int)Math.round(ratio*getWidth()),getHeight()-4);
       }
     }
