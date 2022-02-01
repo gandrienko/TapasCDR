@@ -28,6 +28,17 @@ public class DataUpdater {
   public int setFullData(ArrayList<Conflict> conflicts, ArrayList<Action> actions) {
     if (conflicts==null || conflicts.isEmpty())
       return 0;
+    
+    if (actions!=null && !actions.isEmpty()) {
+      for (Action a:actions)
+        for (Conflict c:conflicts)
+          if (a.actionId.equals(c.actionId1))
+            c.causeAction1=a;
+          else
+            if (a.actionId.equals(c.actionId2))
+              c.causeAction2=a;
+    }
+    
     portions=new ArrayList<DataPortion>(20);
     
     DataPortion p=new DataPortion();

@@ -17,7 +17,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener{
-  public static final String versionText="TAPAS CDR UI version 01/02/2022 11:00";
+  public static final String versionText="TAPAS CDR UI version 01/02/2022 18:10";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -133,7 +133,7 @@ public class ShowConflicts implements ItemListener{
         }
         else
         if (cName.contains("severity")) {
-          NumberByBarCellRenderer sRend=new NumberByBarCellRenderer(0,250);
+          NumberByBarCellRenderer sRend=new NumberByBarCellRenderer(0,15);
           sRend.setPrecision(0);
           sRend.setUpLimit(0);
           sRend.setConflictTableModel(cTableModel);

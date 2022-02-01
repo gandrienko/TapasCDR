@@ -123,6 +123,10 @@ public class Conflict {
    */
   public String actionId1=null, actionId2=null;
   /**
+   * The action(s) this conflict results from
+   */
+  public Action causeAction1=null, causeAction2=null;
+  /**
    * Main.csv: command_category
    * If the conflict emerged due to a previous action or actions, this is
    * the command category: either "foreseen" or "issued"
@@ -175,8 +179,7 @@ public class Conflict {
     return measureOfCompliance;
   }
   /**
-   * Computes severity as a weighted sum of the measure of compliance (MoC) and rate of closure (RoC)
-   * Weights: 20 for separation according to the MoC and 10 for RoC
+   * Computes severity as a sum of the measure of compliance (MoC) and rate of closure (RoC)
    * Separation intervals according to MoC and their values:
    * 0: 100% <= MoC
    * 1: 75% < MoC < 100%
@@ -219,7 +222,7 @@ public class Conflict {
                       0:(measureOfCompliance>75)?
                             1:(measureOfCompliance>50)?
                                   3:(measureOfCompliance>25)?7:10;
-      severity=20*rateMoC+10*rateOfClosure;
+      severity=rateMoC+rateOfClosure;
     }
     return severity;
   }
@@ -236,6 +239,22 @@ public class Conflict {
     if (Double.isNaN(severity))
       getSeverity();
     return relSpeedV;
+  }
+  
+  public String getCause() {
+    if (causeAction1==null && causeAction2==null)
+      return null;
+    String s="";
+    for (int i=0; i<2; i++) {
+      Action a=(i==0)?causeAction1:causeAction2;
+      if (a==null)
+        continue;
+      if (s.length()>0)
+        s+=" and ";
+      s+=a.flightId+":"+a.actionType+" ( "+Action.getMeaningOfActionType(a.actionType)+")";
+    }
+    s+="; "+commandCategory;
+    return s;
   }
   
   public String toString() {
@@ -283,6 +302,13 @@ public class Conflict {
     return false;
   }
   
+  public String getSectorId(){
+    if (flights==null)
+      return null;
+    if (flights[0].sectorId==null)
+      return flights[1].sectorId;
+    return flights[0].sectorId;
+  }
   
   /**
    * Extracts relevant projection points from the given list of all projection points

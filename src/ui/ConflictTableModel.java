@@ -10,14 +10,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class ConflictTableModel  extends AbstractTableModel {
-  public static final String colNames[]={"N","Type","Flight 1","Flight 2",
+  public static final String colNames[]={"N","Type",
+      "Sector",
+      "Flight 1","Flight 2",
       //"Detected at",
       "Start time","CPA time","End time",
       "Severity", "Compliance (MoC)",
       "HorD at CPA","VertD at CPA","H-rate of closure","V-rate of closure",
-      //"HorD at start","HorD at end",
-      //"VertD at start","VertD at end",
-      "Is primary?"
+      "HorD at start","HorD at end",
+      "VertD at start","VertD at end",
+      "Due to"
   };
   /**
    * The set of conflicts to be shown
@@ -60,6 +62,10 @@ public class ConflictTableModel  extends AbstractTableModel {
       return row+1;
     Conflict c=conflicts.get(row);
     String cName=colNames[col].toLowerCase();
+    if (cName.startsWith("sector"))
+      return c.getSectorId();
+    if (cName.startsWith("due"))
+      return c.getCause();
     if (cName.contains("moc") || cName.contains("compliance"))
       return c.getComplianceMeasure();
     if (cName.contains("severity"))
@@ -121,6 +127,9 @@ public class ConflictTableModel  extends AbstractTableModel {
     JLabel label=new JLabel(colNames[col]);
     if (colNames[col].equals("N"))
       label.setText("000");
+    else
+    if (colNames[col].toLowerCase().startsWith("due"))
+      label.setText("000 000 000 000 000 000");
     else
     if (colNames[col].equals("Type"))
       label.setText("conflict");

@@ -134,6 +134,10 @@ public class Action {
           if (a.conflicts==null)
             a.conflicts=new ArrayList<Conflict>(5);
           a.conflicts.add(c);
+          if (a.actionId.equals(c.actionId1))
+            c.causeAction1=a;
+          else
+            c.causeAction2=a;
         }
       }
     }
