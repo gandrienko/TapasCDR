@@ -114,7 +114,7 @@ public class ShowConflicts implements ItemListener{
       centerRenderer.setHorizontalAlignment(JLabel.CENTER);
       TimeCellRenderer timeRenderer=new TimeCellRenderer();
       for (int i=0; i<cTableModel.getColumnCount(); i++) {
-        String cName=cTableModel.getColumnName(i);
+        String cName=cTableModel.getColumnName(i).toLowerCase();
         NumberByBarCellRenderer hDRend=new NumberByBarCellRenderer(0,Conflict.getMaxHorDistance(conflicts)),
             vDRend=new NumberByBarCellRenderer(0,Conflict.getMaxVertDistance(conflicts));
         hDRend.setPrecision(2);
@@ -122,20 +122,38 @@ public class ShowConflicts implements ItemListener{
         hDRend.conflictTableModel=cTableModel;
         vDRend.setPrecision(0);
         vDRend.setLowLimit(ConflictPoint.VD_MIN);
-        vDRend.conflictTableModel=cTableModel;
-        if (cName.contains("MOC") || cName.toLowerCase().contains("compliance")) {
+        vDRend.setConflictTableModel(cTableModel);
+        if (cName.contains("moc") || cName.contains("compliance")) {
           NumberByBarCellRenderer bRend= new NumberByBarCellRenderer(0,100);
           bRend.setPrecision(2);
           bRend.setLowLimit(100);
           bRend.setUnit("%");
-          bRend.conflictTableModel=cTableModel;
+          bRend.setConflictTableModel(cTableModel);
           cTable.getColumnModel().getColumn(i).setCellRenderer(bRend);
         }
         else
-        if (cName.startsWith("Hor"))
+        if (cName.contains("severity")) {
+          NumberByBarCellRenderer sRend=new NumberByBarCellRenderer(0,250);
+          sRend.setPrecision(0);
+          sRend.setUpLimit(0);
+          sRend.setConflictTableModel(cTableModel);
+          cTable.getColumnModel().getColumn(i).setCellRenderer(sRend);
+        }
+        else
+        if (cName.contains("rate")) {
+          NumberByBarCellRenderer rend=(cName.startsWith("h"))?
+                                           new NumberByBarCellRenderer(-100,750):
+                                           new NumberByBarCellRenderer(-1000,4000);
+          rend.setPrecision((cName.startsWith("h"))?2:0);
+          rend.setUpLimit(0);
+          rend.setConflictTableModel(cTableModel);
+          cTable.getColumnModel().getColumn(i).setCellRenderer(rend);
+        }
+        else
+        if (cName.startsWith("hor"))
           cTable.getColumnModel().getColumn(i).setCellRenderer(hDRend);
         else
-        if (cName.startsWith("Vert"))
+        if (cName.startsWith("vert"))
           cTable.getColumnModel().getColumn(i).setCellRenderer(vDRend);
         else
         if (cTableModel.getColumnClass(i).equals(String.class))

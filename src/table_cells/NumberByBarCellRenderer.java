@@ -8,8 +8,8 @@ import java.awt.*;
 
 public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer {
   public double min=0, max=0, value =0;
-  public double lowLimit=Double.NaN;
-  public boolean toShowDistanceToLowLimit=true;
+  public double lowLimit=Double.NaN, upLimit=Double.NaN;
+  public boolean toShowDistanceToLimit =true;
   public int precision=-1;
   public String unit="";
   public ConflictTableModel conflictTableModel=null;
@@ -30,15 +30,31 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
     this.lowLimit = lowLimit;
   }
   
+  public void setUpLimit(double upLimit) {
+    this.upLimit = upLimit;
+  }
+  
   public void setUnit(String unit) {
     this.unit = unit;
+  }
+  
+  public void setConflictTableModel(ConflictTableModel conflictTableModel) {
+    this.conflictTableModel = conflictTableModel;
   }
   
   public void paintComponent (Graphics g) {
     g.setColor(getBackground());
     g.fillRect(0,0,getWidth(),getHeight());
     if (min<max && !Double.isNaN(value)) {
-      if (!toShowDistanceToLowLimit || Double.isNaN(lowLimit) || value>=lowLimit || lowLimit<=min) {
+      toShowDistanceToLimit &=!Double.isNaN(lowLimit) || !Double.isNaN(upLimit);
+      if (toShowDistanceToLimit) {
+        if (!Double.isNaN(lowLimit))
+          toShowDistanceToLimit=value<lowLimit;
+        else
+          if (!Double.isNaN(upLimit))
+            toShowDistanceToLimit=value>upLimit;
+      }
+      if (!toShowDistanceToLimit) {
         g.setColor(Color.lightGray);
         if (min >= 0)
           g.fillRect(0, 2, (int) Math.round(getWidth() * (value - min) / (max - min)), getHeight() - 4);
@@ -59,7 +75,8 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
           }
       }
       else {
-        double ratio=1.0-(value-min)/(lowLimit-min);
+        double ratio=(!Double.isNaN(lowLimit))?1.0-(value-min)/(lowLimit-min):
+                         (value-upLimit)/(max-upLimit);
         g.setColor(new Color(100+(int)Math.round(ratio*155),0,0,50+(int)Math.round(ratio*100)));
         g.fillRect(0,2,(int)Math.round(ratio*getWidth()),getHeight()-4);
       }
@@ -101,8 +118,9 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
         setText(value.toString()+unit);
       else
         setText(String.format("%."+precision+"f%s",value,unit));
-      if (!Double.isNaN(lowLimit) && this.value<lowLimit && conflictTableModel!=null)
-        toShowDistanceToLowLimit=conflictTableModel.isDistanceToLowLimitImportant(row,column);
+      if (!Double.isNaN(lowLimit) || !Double.isNaN(upLimit))
+        toShowDistanceToLimit =(conflictTableModel==null)?true:
+                                   conflictTableModel.isDistanceToLimitImportant(row,column);
     }
     if (isSelected)
       setBackground(table.getSelectionBackground());

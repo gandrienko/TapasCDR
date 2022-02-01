@@ -11,10 +11,12 @@ import java.util.ArrayList;
 
 public class ConflictTableModel  extends AbstractTableModel {
   public static final String colNames[]={"N","Type","Flight 1","Flight 2",
-      "Detected at","Start time","CPA time","End time",
-      "Severity","Compliance (MoC)",
-      "HorD at start","HorD at CPA","HorD at end",
-      "VertD at start","VertD at CPA","VertD at end",
+      //"Detected at",
+      "Start time","CPA time","End time",
+      "Severity", "Compliance (MoC)",
+      "HorD at CPA","VertD at CPA","H-rate of closure","V-rate of closure",
+      //"HorD at start","HorD at end",
+      //"VertD at start","VertD at end",
       "Is primary?"
   };
   /**
@@ -36,6 +38,8 @@ public class ConflictTableModel  extends AbstractTableModel {
       return LocalDateTime.class;
     if (cName.contains("hor"))
       return Double.class;
+    if (cName.contains("rate"))
+      return (cName.startsWith("h"))?Double.class:Integer.class;
     if (cName.contains("primary"))
       return Boolean.class;
     if (cName.contains("moc") || cName.contains("compliance"))
@@ -60,6 +64,10 @@ public class ConflictTableModel  extends AbstractTableModel {
       return c.getComplianceMeasure();
     if (cName.contains("severity"))
       return (int)Math.round(c.getSeverity());
+    if (cName.contains("rate"))
+      return (cName.startsWith("h"))?
+                 c.getRelSpeedH():
+                 (int)Math.round(c.getRelSpeedV());
     if (cName.equals("type"))
       return c.type;
     if (cName.equals("is primary?"))
@@ -85,9 +93,10 @@ public class ConflictTableModel  extends AbstractTableModel {
     return null;
   }
   
-  public boolean isDistanceToLowLimitImportant(int row, int col) {
+  public boolean isDistanceToLimitImportant(int row, int col) {
     String cName=colNames[col].toLowerCase();
-    if (cName.contains("moc") || cName.contains("compliance"))
+    if (cName.contains("moc") || cName.contains("compliance") ||
+            cName.contains("severity") || cName.contains("rate"))
       return true;
     if (!cName.startsWith("hor") && !cName.startsWith("vert"))
       return false;
@@ -121,7 +130,7 @@ public class ConflictTableModel  extends AbstractTableModel {
     else
       if (colNames[col].contains("time") || colNames[col].startsWith("Detect"))
         label.setText("00:00:00");
-    return label.getPreferredSize().width+10;
+    return label.getPreferredSize().width+5;
   }
   
 }

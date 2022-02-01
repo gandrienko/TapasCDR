@@ -208,12 +208,12 @@ public class Conflict {
     }
     if (Double.isNaN(relSpeedH) || Double.isNaN((relSpeedV))) {
       ConflictPoint cp = flights[0].closest, cpPrev = flights[0].first;
-      if (cp.pointTimeUnix <= cpPrev.pointTimeUnix)
-        return Double.NaN;
-      relSpeedH=(cpPrev.hDistance-cp.hDistance)/(cp.pointTimeUnix-cpPrev.pointTimeUnix)*60;
-      relSpeedH=(cpPrev.vDistance-cp.vDistance)/(cp.pointTimeUnix-cpPrev.pointTimeUnix)*60;
-      rateOfClosureH=(relSpeedH<=0)?0:(relSpeedH<=85)?1:(relSpeedH<=205)?2:(relSpeedH<=700)?4:5;
-      rateOfClosureV=(relSpeedV<=0)?0:(relSpeedV<=1000)?1:(relSpeedV<=2000)?2:(relSpeedV<=4000)?4:5;
+      if (cp.pointTimeUnix > cpPrev.pointTimeUnix) {
+        relSpeedH=(cpPrev.hDistance-cp.hDistance)/(cp.pointTimeUnix-cpPrev.pointTimeUnix)*60;
+        relSpeedV=(cpPrev.vDistance-cp.vDistance)/(cp.pointTimeUnix-cpPrev.pointTimeUnix)*60;
+        rateOfClosureH=(relSpeedH<=0)?0:(relSpeedH<=85)?1:(relSpeedH<=205)?2:(relSpeedH<=700)?4:5;
+        rateOfClosureV=(relSpeedV<=0)?0:(relSpeedV<=1000)?1:(relSpeedV<=2000)?2:(relSpeedV<=4000)?4:5;
+      }
       int rateOfClosure=Math.max(rateOfClosureH,rateOfClosureV);
       int rateMoC=(measureOfCompliance>=100)?
                       0:(measureOfCompliance>75)?
@@ -222,6 +222,20 @@ public class Conflict {
       severity=20*rateMoC+10*rateOfClosure;
     }
     return severity;
+  }
+  
+  public double getRelSpeedH() {
+    if (Double.isNaN(severity))
+      getSeverity();
+    if (Double.isNaN(relSpeedH))
+      return 0;
+    return relSpeedH;
+  }
+  
+  public double getRelSpeedV() {
+    if (Double.isNaN(severity))
+      getSeverity();
+    return relSpeedV;
   }
   
   public String toString() {
