@@ -1,6 +1,8 @@
 package data;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 /**
@@ -251,7 +253,15 @@ public class Conflict {
         continue;
       if (s.length()>0)
         s+=" and ";
-      s+=a.flightId+":"+a.actionType+" ( "+Action.getMeaningOfActionType(a.actionType)+")";
+      else {
+        int divIdx=a.actionId.indexOf("_");
+        if (divIdx>0) {
+          long timeStamp = Long.parseLong(a.actionId.substring(0, divIdx));
+          LocalDateTime dt=LocalDateTime.ofEpochSecond(timeStamp,0, ZoneOffset.UTC);
+          s=String.format("%02d:%02d:%02d : ",dt.getHour(),dt.getMinute(),dt.getSecond());
+        }
+      }
+      s+=a.actionType+" applied to "+a.flightId+" ("+Action.getMeaningOfActionType(a.actionType)+")";
     }
     s+="; "+commandCategory;
     return s;

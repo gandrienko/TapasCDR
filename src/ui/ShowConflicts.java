@@ -17,7 +17,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener{
-  public static final String versionText="TAPAS CDR UI version 01/02/2022 18:10";
+  public static final String versionText="TAPAS CDR UI version 01/02/2022 18:35";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -109,7 +109,25 @@ public class ShowConflicts implements ItemListener{
       mainFrame.setTitle(frameTitle);
     
     if (cTable==null) {
-      cTable = new JTable(cTableModel);
+      cTable = new JTable(cTableModel) {
+        public String getToolTipText(MouseEvent e) {
+          java.awt.Point p = e.getPoint();
+          int colIndex = columnAtPoint(p), rowIndex = rowAtPoint(p);
+          if (colIndex >= 0 && rowIndex>=0) {
+            int realColIndex = convertColumnIndexToModel(colIndex);
+            if (realColIndex >= 0 && cTableModel.getColumnClass(realColIndex).equals(String.class)) {
+              int realRowIndex = convertRowIndexToModel(rowIndex);
+              if (realRowIndex>=0) {
+                String value=(String)cTableModel.getValueAt(realRowIndex,realColIndex);
+                if (value!=null && value.length()>10)
+                  return value;
+              }
+            }
+          }
+          return "";
+        }
+        
+      };
       DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
       centerRenderer.setHorizontalAlignment(JLabel.CENTER);
       TimeCellRenderer timeRenderer=new TimeCellRenderer();
