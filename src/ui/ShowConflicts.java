@@ -36,7 +36,9 @@ public class ShowConflicts implements ItemListener{
   public AltiView altiView=null;
   
   public JTable cTable=null, aTable=null;
-  public JFrame mainFrame=null, mapFrame=null;
+  public JFrame mainFrame=null;
+  public JPanel oneConflictPanel=null;
+  public JLabel oneConflictTitle=null;
   
   protected JComboBox portionChoice=null;
   
@@ -244,14 +246,7 @@ public class ShowConflicts implements ItemListener{
         if (c.sameFlights(conflicts.get(i)))
           cIdx=i;
       if (cIdx<0) {
-        /*
-        mapFrame.dispose();
-        mapFrame=null;
-        mapView=null;
-        altiView=null;
-        aTable=null;
-        */
-        mapFrame.setTitle("The earlier shown information expired!");
+        oneConflictTitle.setText("The earlier shown information expired!");
         mapView.setConflict(null);
         altiView.setConflict(null);
         if (aTableModel!=null) {
@@ -271,11 +266,11 @@ public class ShowConflicts implements ItemListener{
     Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
     if (mapView==null) {
       mapView=new MapView();
-      mapView.setPreferredSize(new Dimension(size.height/4,size.height/4));
+      mapView.setPreferredSize(new Dimension(size.width/4,size.height/4));
     }
     if (altiView==null) {
       altiView=new AltiView();
-      altiView.setPreferredSize(new Dimension(size.width/3,size.height/4));
+      altiView.setPreferredSize(new Dimension(size.width/4,size.height/4));
     }
     if (!isSecondary && aTable==null) {
       aTableModel =new ActionsTableModel();
@@ -342,29 +337,34 @@ public class ShowConflicts implements ItemListener{
         }
       });
     }
-    if (mapFrame==null) {
-      JSplitPane spl1=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,mapView,altiView);
-      spl1.setDividerLocation(mapView.getPreferredSize().width);
+    if (oneConflictPanel==null) {
+      oneConflictPanel=new JPanel();
+      oneConflictPanel.setLayout(new BorderLayout());
+      oneConflictTitle=new JLabel("Conflict of flights " +
+                                      conflict.flights[0].flightId +
+                                      " and " + conflict.flights[1].flightId,JLabel.LEFT);
+      oneConflictPanel.add(oneConflictTitle,BorderLayout.NORTH);
+      JSplitPane spl1=new JSplitPane(JSplitPane.VERTICAL_SPLIT,mapView,altiView);
+      spl1.setDividerLocation(mapView.getPreferredSize().height);
       JSplitPane spl2=null;
       if (aTable!=null) {
         JScrollPane scrollPane = new JScrollPane(aTable);
-        spl2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, spl1, scrollPane);
-        spl2.setDividerLocation(Math.round(0.3f * size.height));
+        spl2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, spl1, scrollPane);
+        spl2.setDividerLocation(Math.round(0.3f * size.width));
       }
-
-      mapFrame = new JFrame("Conflict geometry");
-      mapFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-      mapFrame.getContentPane().add((spl2==null)?spl1:spl2, BorderLayout.CENTER);
-      //Display the window.
-      mapFrame.pack();
-      mapFrame.setSize(Math.min(mainFrame.getWidth(),Math.round(0.8f*size.width)),
-          (isSecondary)?Math.round(0.25f*size.height):Math.round(0.5f*size.height));
-      mapFrame.setLocation(mainFrame.getX(), mainFrame.getY()+mainFrame.getHeight());
-      mapFrame.setVisible(true);
+      oneConflictPanel.add((spl2==null)?spl1:spl2,BorderLayout.CENTER);
+      Container mainC=mainFrame.getContentPane();
+      JSplitPane splAll=new JSplitPane(JSplitPane.VERTICAL_SPLIT,mainC,oneConflictPanel);
+      splAll.setDividerLocation(Math.round(0.1f * size.height));
+      mainFrame.setContentPane(splAll);
+      mainFrame.pack();
+      mainFrame.setSize(Math.min(mainFrame.getWidth(),Math.round(0.8f*size.width)),
+          Math.min(mainFrame.getHeight(),Math.round(0.8f*size.height)));
     }
     if (conflict.equals(mapView.conflict))
       return;
-    mapFrame.setTitle("Conflict of flights " + conflict.flights[0].flightId + " and " + conflict.flights[1].flightId);
+    oneConflictTitle.setText("Conflict of flights " + conflict.flights[0].flightId +
+                                 " and " + conflict.flights[1].flightId);
     mapView.setConflict(conflict);
     altiView.setConflict(conflict);
     if (aTableModel!=null) {
