@@ -3,15 +3,20 @@ package map;
 import data.Conflict;
 import data.ConflictPoint;
 import data.FlightInConflict;
+import data.FlightPoint;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 
-public class MapView extends JPanel implements MouseListener, MouseMotionListener {
+public class MapView extends JPanel
+    implements MouseListener, MouseMotionListener, ChangeListener
+{
   public static final Color colorF1=new Color(128,0,0), colorF2=new Color(0,0,128),
       paleColorF1 =new Color(255,0,0,128), paleColorF2 =new Color(0,0,255,128),
       textColorF1=new Color(96,0,0,128), textColorF2=new Color(0,0,96,128);
@@ -37,10 +42,18 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
   protected BufferedImage off_Image=null;
   protected boolean off_Valid=false;
   
+  public TimeTransmitter tTrans=new TimeTransmitter();
+  
   public MapView(){
     super();
     addMouseListener(this);
     addMouseMotionListener(this);
+  }
+  
+  public void setTimeTransmitter(TimeTransmitter tTrans) {
+    this.tTrans = tTrans;
+    if (tTrans!=null)
+      tTrans.addChangeListener(this);
   }
   
   public void setConflict(Conflict conflict) {
@@ -285,4 +298,82 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
   public void mouseEntered(MouseEvent e) {};
   public void mouseExited(MouseEvent e) {};
   public void mouseMoved(MouseEvent e) {}
+  
+  public void stateChanged(ChangeEvent e) {
+    if (e.getSource().equals(tTrans)) {
+      redraw(false);
+      if (tTrans.timeUnix<conflict.detectionTimeUnix)
+        return;
+      //find the points corresponding to the time
+      Point p1=null, p2=null;
+      double lon[]={Double.NaN,Double.NaN}, lat[]={Double.NaN,Double.NaN}, alt[]={Double.NaN,Double.NaN};
+      
+      for (int i=0; i<2; i++) {
+        FlightInConflict f=conflict.flights[i];
+        long t0=conflict.detectionTimeUnix;
+        double lon0=f.lon, lat0=f.lat, alt0=f.altitude;
+        Point p=null;
+        for (int j=0; j<3 && p==null; j++) {
+          if (tTrans.timeUnix==t0) {
+            p = new Point(metrics.scrX(lon0), metrics.scrY(lat0));
+            lon[i]=lon0; lat[i]=lat0; alt[i]=alt0;
+          }
+          else {
+            ConflictPoint cp=(j==0)?f.first:(j==1)?f.closest:f.last;
+            if (cp.pointTimeUnix>t0 && tTrans.timeUnix<cp.pointTimeUnix) {
+              double ratio=1.0*(tTrans.timeUnix-t0)/(cp.pointTimeUnix-t0);
+              lon[i]=lon0+(cp.lon-lon0)*ratio;
+              lat[i]=lat0+(cp.lat-lat0)*ratio;
+              alt[i]=alt0+(cp.altitude-alt0)*ratio;
+              p=new Point(metrics.scrX(lon[i]),metrics.scrY(lat[i]));
+            }
+            else {
+              t0=cp.pointTimeUnix;
+              lon0=cp.lon;
+              lat0=cp.lat;
+              alt0=cp.altitude;
+            }
+          }
+        }
+        if (p==null && f.pp!=null)
+          for (int j=0; j<f.pp.length && p==null; j++) {
+            if (tTrans.timeUnix==t0) {
+              p = new Point(metrics.scrX(lon0), metrics.scrY(lat0));
+              lon[i]=lon0; lat[i]=lat0; alt[i]=alt0;
+            }
+            else {
+              FlightPoint cp = f.pp[j];
+              if (cp.pointTimeUnix > t0 && tTrans.timeUnix < cp.pointTimeUnix) {
+                double ratio = 1.0 * (tTrans.timeUnix - t0) / (cp.pointTimeUnix - t0);
+                lon[i]=lon0+(cp.lon-lon0)*ratio;
+                lat[i]=lat0+(cp.lat-lat0)*ratio;
+                alt[i]=alt0+(cp.altitude-alt0)*ratio;
+                p=new Point(metrics.scrX(lon[i]),metrics.scrY(lat[i]));
+              }
+              else {
+                t0 = cp.pointTimeUnix;
+                lon0 = cp.lon;
+                lat0 = cp.lat;
+                alt0=cp.altitude;
+              }
+            }
+          }
+        if (p==null)
+          break;
+        else
+          if (i==0) p1=p; else p2=p;
+      }
+      
+      if (p1!=null && p2!=null) {
+        Graphics g=getGraphics();
+        g.setColor(Color.magenta);
+        g.drawLine(p1.x,p1.y,p2.x,p2.y);
+        double dHor=MapMetrics.geoDist(lon[0],lat[0],lon[1],lat[1])/1852,
+            dVert=Math.abs(alt[0]-alt[1]);
+        String txt=String.format("Distances: %.2f nm; %.0f feet at %s",dHor,dVert,tTrans.getTimeText());
+        int sw=g.getFontMetrics().stringWidth(txt);
+        g.drawString(txt,getWidth()/2-sw/2,5+g.getFontMetrics().getAscent());
+      }
+    }
+  }
 }

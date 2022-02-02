@@ -17,7 +17,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener{
-  public static final String versionText="TAPAS CDR UI version 02/02/2022 13:40";
+  public static final String versionText="TAPAS CDR UI version 02/02/2022 19:05";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -271,6 +271,7 @@ public class ShowConflicts implements ItemListener{
     if (altiView==null) {
       altiView=new AltiView();
       altiView.setPreferredSize(new Dimension(size.width/4,size.height/4));
+      mapView.setTimeTransmitter(altiView.getTimeTransmitter());
     }
     if (!isSecondary && aTable==null) {
       aTableModel =new ActionsTableModel();
