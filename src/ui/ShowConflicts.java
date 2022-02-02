@@ -118,7 +118,7 @@ public class ShowConflicts implements ItemListener{
           int colIndex = columnAtPoint(p), rowIndex = rowAtPoint(p);
           if (colIndex >= 0 && rowIndex>=0) {
             int realColIndex = convertColumnIndexToModel(colIndex);
-            if (realColIndex >= 0 && cTableModel.getColumnClass(realColIndex).equals(String.class)) {
+            if (realColIndex >= 0) {
               int realRowIndex = convertRowIndexToModel(rowIndex);
               if (realRowIndex>=0) {
                 String text=cTableModel.getDetailedText(realRowIndex,realColIndex);
