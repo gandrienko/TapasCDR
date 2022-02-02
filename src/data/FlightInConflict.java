@@ -141,4 +141,16 @@ public class FlightInConflict {
     Arrays.sort(pp);
     return pp.length;
   }
+  
+  public String getDescriptionHTML() {
+    String s=String.format("<p align=center>Flight <b>%s</b></p>",flightId);
+    s += "<table border=0 cellmargin=3 cellpadding=3 cellspacing=3 align=center>";
+    s+=String.format("<tr align=right><td>Phase</td><td>%s</td></tr>",phase);
+    s+=String.format("<tr align=right><td>Course</td><td>%.1f</td><td>degrees</td></tr>",course);
+    s+=String.format("<tr align=right><td>Horizontal speed</td><td>%.2f</td><td>nm/min.</td></tr>",speed_h*60/1852);
+    s+=String.format("<tr align=right><td>Vertical speed</td><td>%.0f</td><td>feet/min.</td></tr>",speed_v*60);
+    s+=String.format("<tr align=right><td>Altitude</td><td>%d</td><td>feet</td></tr>",altitude);
+    s += "</table>";
+    return "<html><body>"+s+"</body></html>";
+  }
 }
