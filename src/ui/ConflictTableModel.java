@@ -99,6 +99,15 @@ public class ConflictTableModel  extends AbstractTableModel {
     return null;
   }
   
+  public String getDetailedText(int row, int col) {
+    if (colNames[col].toLowerCase().startsWith("due"))
+      return conflicts.get(row).getCauseHTML();
+    Object v=getValueAt(row,col);
+    if (v==null)
+      return null;
+    return v.toString();
+  }
+  
   public boolean isDistanceToLimitImportant(int row, int col) {
     String cName=colNames[col].toLowerCase();
     if (cName.contains("moc") || cName.contains("compliance") ||

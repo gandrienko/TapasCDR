@@ -252,7 +252,7 @@ public class Conflict {
       if (a==null)
         continue;
       if (s.length()>0)
-        s+=" and ";
+        s+=" + ";
       else {
         int divIdx=a.actionId.indexOf("_");
         if (divIdx>0) {
@@ -261,9 +261,34 @@ public class Conflict {
           s=String.format("%02d:%02d:%02d : ",dt.getHour(),dt.getMinute(),dt.getSecond());
         }
       }
-      s+="<p><b>"+a.actionType+"</b> applied to <b>"+a.flightId+"</b> ("+Action.getMeaningOfActionType(a.actionType)+")</p>";
+      s+=a.actionType+((a.actionValue==0)?"":" by "+a.actionValue)+" to "+a.flightId;
     }
     s+="; "+commandCategory;
+    return s;
+  }
+  
+  public String getCauseHTML() {
+    if (causeAction1==null && causeAction2==null)
+      return null;
+    String s="";
+    for (int i=0; i<2; i++) {
+      Action a=(i==0)?causeAction1:causeAction2;
+      if (a==null)
+        continue;
+      if (s.length()>0)
+        s+=" and ";
+      else {
+        int divIdx=a.actionId.indexOf("_");
+        if (divIdx>0) {
+          long timeStamp = Long.parseLong(a.actionId.substring(0, divIdx));
+          LocalDateTime dt=LocalDateTime.ofEpochSecond(timeStamp,0, ZoneOffset.UTC);
+          s=String.format("%02d:%02d:%02d %s:",dt.getHour(),dt.getMinute(),dt.getSecond(),commandCategory);
+        }
+      }
+      s+="<p><b>"+a.actionType+"</b> ("+Action.getMeaningOfActionType(a.actionType)+")"+
+             ((a.actionValue==0)?"":" by "+a.actionValue)+" applied to <b>"+
+             a.flightId+"</b></p>";
+    }
     return "<html><body>"+s+"</body></html>";
   }
   

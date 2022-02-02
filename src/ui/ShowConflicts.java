@@ -17,7 +17,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener{
-  public static final String versionText="TAPAS CDR UI version 01/02/2022 18:35";
+  public static final String versionText="TAPAS CDR UI version 02/02/2022 13:40";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -109,6 +109,9 @@ public class ShowConflicts implements ItemListener{
       mainFrame.setTitle(frameTitle);
     
     if (cTable==null) {
+      UIManager.put("ToolTip.background", new Color(255,240,200));
+      ToolTipManager.sharedInstance().setDismissDelay(60000);
+      
       cTable = new JTable(cTableModel) {
         public String getToolTipText(MouseEvent e) {
           java.awt.Point p = e.getPoint();
@@ -118,13 +121,13 @@ public class ShowConflicts implements ItemListener{
             if (realColIndex >= 0 && cTableModel.getColumnClass(realColIndex).equals(String.class)) {
               int realRowIndex = convertRowIndexToModel(rowIndex);
               if (realRowIndex>=0) {
-                String value=(String)cTableModel.getValueAt(realRowIndex,realColIndex);
-                if (value!=null && value.length()>10)
-                  return value;
+                String text=cTableModel.getDetailedText(realRowIndex,realColIndex);
+                if (text!=null && text.length()>5)
+                  return text;
               }
             }
           }
-          return "";
+          return null;
         }
         
       };
