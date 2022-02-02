@@ -261,10 +261,10 @@ public class Conflict {
           s=String.format("%02d:%02d:%02d : ",dt.getHour(),dt.getMinute(),dt.getSecond());
         }
       }
-      s+=a.actionType+" applied to "+a.flightId+" ("+Action.getMeaningOfActionType(a.actionType)+")";
+      s+="<p><b>"+a.actionType+"</b> applied to <b>"+a.flightId+"</b> ("+Action.getMeaningOfActionType(a.actionType)+")</p>";
     }
     s+="; "+commandCategory;
-    return s;
+    return "<html><body>"+s+"</body></html>";
   }
   
   public String toString() {
