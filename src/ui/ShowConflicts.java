@@ -280,7 +280,24 @@ public class ShowConflicts implements ItemListener{
     if (!isSecondary && aTable==null) {
       aTableModel =new ActionsTableModel();
       aTableModel.setActions(conflict.actions);
-      aTable = new JTable(aTableModel);
+      aTable = new JTable(aTableModel){
+        public String getToolTipText(MouseEvent e) {
+          java.awt.Point p = e.getPoint();
+          int colIndex = columnAtPoint(p), rowIndex = rowAtPoint(p);
+          if (colIndex >= 0 && rowIndex>=0) {
+            int realColIndex = convertColumnIndexToModel(colIndex);
+            if (realColIndex >= 0) {
+              int realRowIndex = convertRowIndexToModel(rowIndex);
+              if (realRowIndex>=0) {
+                String text=aTableModel.getDetailedText(realRowIndex,realColIndex);
+                if (text!=null && text.length()>5)
+                  return text;
+              }
+            }
+          }
+          return null;
+        }
+      };
       DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
       centerRenderer.setHorizontalAlignment(JLabel.CENTER);
       TimeCellRenderer timeRenderer=new TimeCellRenderer();

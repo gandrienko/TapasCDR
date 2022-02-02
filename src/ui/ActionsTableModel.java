@@ -88,10 +88,22 @@ public class ActionsTableModel extends AbstractTableModel {
           s=Action.type_meanings[i];
       label.setText("A4: "+s);
     }
+    /*
     else
     if (colNames[col].equals("Why not")) {
       label.setText("Horizontal speed cannot be decreased");
     }
+    */
     return label.getPreferredSize().width+10;
+  }
+  
+  public String getDetailedText(int row, int col) {
+    String cName=colNames[col].toLowerCase();
+    if (colNames[col].toLowerCase().startsWith("why"))
+      return actions.get(row).whyNot;
+    Object v=getValueAt(row,col);
+    if (v==null)
+      return null;
+    return v.toString();
   }
 }
