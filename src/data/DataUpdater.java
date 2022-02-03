@@ -3,6 +3,7 @@ package data;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.util.ArrayList;
+import java.util.Timer;
 import java.util.TimerTask;
 
 /**
@@ -10,7 +11,7 @@ import java.util.TimerTask;
  * Imitates data coming every X seconds by taking portions from a single long sequence.
  */
 
-public class DataUpdater extends TimerTask {
+public class DataUpdater {
   /**
    * The data divided into portions
    */
@@ -98,6 +99,10 @@ public class DataUpdater extends TimerTask {
     return portions.size();
   }
   
+  public boolean hasNextPortion(){
+    return portions!=null && lastIdx<portions.size();
+  }
+  
   public DataPortion getCurrentDataPortion() {
     if (portions==null || portions.isEmpty())
       return null;
@@ -132,36 +137,69 @@ public class DataUpdater extends TimerTask {
   /**
    * Time interval, in seconds, between receiving/sending data portions
    */
-  public int timeStep=5;
+  public int timeStep=10;
   /**
    * The index of the last conflict sent
    */
   public int lastIdx=-1;
   
+  private Timer timer=null;
+  
   public void setTimeStep(int timeStep) {
+    if (this.timeStep==timeStep)
+      return;
     this.timeStep = timeStep;
+    if (isRunning && timer!=null) {
+      timer.cancel();
+      timer=new Timer();
+      timer.scheduleAtFixedRate(new DataUpdateTask(this),0,timeStep*1000);
+    }
   }
   
   public boolean isRunning() {
     return isRunning;
   }
   
-  public void startAutoUpdating(int fromIdx) {
+  public boolean startAutoUpdating(int fromIdx) {
+    if (portions==null || portions.isEmpty())
+      return false;
+    if (isRunning || timer!=null)
+      return false;
+    if (fromIdx<0 || fromIdx>=portions.size())
+      fromIdx=0;
+    setToStop(false);
+    lastIdx=fromIdx-1;
+    timer=new Timer();
+    timer.scheduleAtFixedRate(new DataUpdateTask(this),0,timeStep*1000);
+    return true;
   }
   
   public void setToStop(boolean toStop) {
     this.toStop = toStop;
+    stopTimer();
+    isRunning=false;
+  }
+  
+  protected void stopTimer() {
+    if (timer!=null) {
+      timer.cancel();
+      timer=null;
+    }
   }
   
   public void run() {
     if (toStop) {
+      stopTimer();
       isRunning=false;
       toStop=false;
       return;
     }
+    isRunning=true;
     ++lastIdx;
-    if (lastIdx>=portions.size())
-      isRunning=false;
+    if (lastIdx>=portions.size()) {
+      stopTimer();
+      isRunning = false;
+    }
     //notify about the next portion or the end of the process
     notifyChange();
   }

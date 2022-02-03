@@ -20,7 +20,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 03/02/2022 13:05";
+  public static final String versionText="TAPAS CDR UI version 03/02/2022 18:20";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -45,7 +45,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   public JTable cTable=null, aTable=null;
   public JFrame mainFrame=null;
   public JPanel controlPanel=null, oneConflictPanel=null;
-  public JLabel oneConflictTitle=null;
+  public JLabel oneConflictTitle=null, updateLabel=null;
   
   protected JComboBox portionChoice=null;
   protected JButton bAuto=null;
@@ -84,6 +84,8 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     this.dataUpdater = dataUpdater;
     if (dataUpdater!=null) {
       dataUpdater.addChangeListener(this);
+      if (portionChoice!=null)
+        dataUpdater.lastIdx=portionChoice.getSelectedIndex();
       if (controlPanel!=null) {
         bAuto=new JButton("Update automatically");
         bAuto.setActionCommand("auto");
@@ -95,6 +97,9 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
         stepChoice.addChangeListener(this);
         controlPanel.add(stepChoice);
         controlPanel.add(new JLabel("seconds"));
+        updateLabel=new JLabel("Data portion N "+(dataUpdater.lastIdx+1));
+        updateLabel.setForeground(Color.blue.darker());
+        controlPanel.add(updateLabel);
         controlPanel.invalidate();
         controlPanel.validate();
       }
@@ -105,11 +110,28 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     if (e.getSource().equals(portionChoice)) {
       int pIdx=portionChoice.getSelectedIndex();
       setConflicts(portions.get(pIdx).conflicts);
+      if (updateLabel!=null)
+        updateLabel.setText("Data portion N "+(pIdx+1));
     }
   }
   
   public void actionPerformed (ActionEvent e) {
-    //todo ...
+    if (e.getActionCommand().equals("auto")) {
+      int fromIndex=(portionChoice!=null)?portionChoice.getSelectedIndex()+1:dataUpdater.lastIdx+1;
+      if (dataUpdater.startAutoUpdating(fromIndex)) {
+        if (portionChoice != null)
+          portionChoice.setEnabled(false);
+        bAuto.setText("Stop auto updates");
+        bAuto.setActionCommand("stop");
+        if (stepChoice!=null)
+          stepChoice.setEnabled(false);
+      }
+    }
+    else
+      if (e.getActionCommand().equals("stop")) {
+        dataUpdater.setToStop(true);
+        autoUpdateStopped();
+      }
   }
   
   public void stateChanged(ChangeEvent e) {
@@ -117,21 +139,31 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       aTableModel.setMaxRankToShow((int)rankChoice.getValue());
     else
       if (e.getSource().equals(dataUpdater)) {
-        if (dataUpdater.isRunning()) {
+        if (dataUpdater.isRunning() && dataUpdater.hasNextPortion()) {
           setConflicts(dataUpdater.getCurrentDataPortion().conflicts);
           if (portionChoice!=null)
             portionChoice.setSelectedIndex(dataUpdater.lastIdx);
+          updateLabel.setText("Data portion N "+(dataUpdater.lastIdx+1));
         }
         else
-          if (portionChoice!=null) {
-            portionChoice.setSelectedIndex(dataUpdater.lastIdx);
-            portionChoice.setEnabled(true);
-          }
+          autoUpdateStopped();
       }
       else
         if (e.getSource().equals(stepChoice)){
-          //todo ...
+          dataUpdater.setTimeStep((int)stepChoice.getValue());
         }
+  }
+  
+  protected void autoUpdateStopped() {
+    if (portionChoice != null) {
+      portionChoice.setEnabled(true);
+    }
+    if (bAuto!=null) {
+      bAuto.setText("Update automatically");
+      bAuto.setActionCommand("auto");
+    }
+    if (stepChoice!=null)
+      stepChoice.setEnabled(true);
   }
   
   public void setIsSecondary(boolean secondary) {
