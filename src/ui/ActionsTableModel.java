@@ -14,14 +14,53 @@ public class ActionsTableModel extends AbstractTableModel {
       "Why not"
   };
   
-  public ArrayList<Action> actions=null;
+  public ArrayList<Action> actions=null, allActions=null;
+  
+  public int maxRank=-1, maxRankToShow=-1;
   
   public void setActions(ArrayList<Action> actions) {
     this.actions = actions;
+    this.allActions=null;
+    maxRank=-1;
+    if (actions!=null)
+      for (Action a:actions)
+        if (a.rank>maxRank)
+          maxRank=a.rank;
+    if (maxRankToShow>=0 && maxRankToShow<maxRank) {
+      int max = maxRankToShow;
+      maxRankToShow = -1; //to force updating
+      setMaxRankToShow(max);
+    }
   }
+  
+  public void setMaxRankToShow(int max) {
+    if (maxRankToShow==max)
+      return;
+    maxRankToShow=max;
+    if (maxRankToShow<0 || maxRankToShow>=maxRank) {
+      if (allActions!=null && actions.size()<allActions.size()) {
+        actions=allActions;
+        allActions=null;
+        fireTableDataChanged();
+        return;
+      }
+    }
+    if (allActions==null) {
+      allActions = actions;
+      actions=new ArrayList<Action>(allActions.size());
+    }
+    else
+      actions.clear();
+    for (int i=0; i<allActions.size(); i++)
+      if (allActions.get(i).rank<=maxRankToShow)
+        actions.add(allActions.get(i));
+    fireTableDataChanged();
+  }
+  
   public String getColumnName(int col) {
     return colNames[col];
   }
+  
   public Class getColumnClass(int c) {
     if (colNames[c].equals("Value") || colNames[c].equals("Rank") ||
             colNames[c].equals("Duration") || colNames[c].equals("Added conflicts"))
@@ -32,14 +71,17 @@ public class ActionsTableModel extends AbstractTableModel {
       return Double.class;
     return String.class;
   }
+  
   public int getRowCount() {
     if (actions==null)
       return 0;
     return actions.size();
   }
+  
   public int getColumnCount() {
     return colNames.length;
   }
+  
   public Object getValueAt(int row, int col) {
     Action a=actions.get(row);
     String cName=colNames[col];

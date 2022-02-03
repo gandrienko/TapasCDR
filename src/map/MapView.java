@@ -300,6 +300,8 @@ public class MapView extends JPanel
   public void mouseMoved(MouseEvent e) {}
   
   public void stateChanged(ChangeEvent e) {
+    if (conflict==null)
+      return;
     if (e.getSource().equals(tTrans)) {
       redraw(false);
       if (tTrans.timeUnix<conflict.detectionTimeUnix)

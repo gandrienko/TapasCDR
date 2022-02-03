@@ -299,11 +299,11 @@ public class AltiView extends JPanel implements MouseMotionListener {
       if (x<x0) x=x0; else if (x>x0+xLength) x=x0+xLength;
     }
     long t=xPosToTime(x);
-    if (tTrans.timeUnix==t)
-      return;
     redraw();
-    tTrans.timeUnix=t;
-    tTrans.notifyChange();
+    if (tTrans.timeUnix!=t) {
+      tTrans.timeUnix = t;
+      tTrans.notifyChange();
+    }
     if (t<=0)
       return;
     Graphics g=getGraphics();

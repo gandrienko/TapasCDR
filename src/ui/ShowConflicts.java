@@ -9,6 +9,8 @@ import table_cells.NumberByBarCellRenderer;
 import table_cells.TimeCellRenderer;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.*;
@@ -16,8 +18,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 
-public class ShowConflicts implements ItemListener{
-  public static final String versionText="TAPAS CDR UI version 02/02/2022 19:05";
+public class ShowConflicts implements ItemListener, ChangeListener {
+  public static final String versionText="TAPAS CDR UI version 03/02/2022 13:05";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -41,6 +43,7 @@ public class ShowConflicts implements ItemListener{
   public JLabel oneConflictTitle=null;
   
   protected JComboBox portionChoice=null;
+  protected JSpinner rankChoice=null;
   
   protected ShowConflicts secondary =null, primary =null;
   
@@ -106,14 +109,22 @@ public class ShowConflicts implements ItemListener{
       if (aTableModel!=null) {
         aTableModel.setActions(null);
         aTableModel.fireTableDataChanged();
+        if (rankChoice!=null)
+          rankChoice.setEnabled(false);
       }
-      return;
+      if (oneConflictTitle!=null) {
+        oneConflictTitle.setText("The earlier shown information expired!");
+        oneConflictTitle.repaint();
+      }
     }
     
-    LocalDateTime dt=conflicts.get(0).detectionTime;
-    String frameTitle=String.format("%s; Conflicts detected %02d/%02d/%04d at %02d:%02d:%02d",
-        versionText,
-        dt.getDayOfMonth(),dt.getMonthValue(),dt.getYear(),dt.getHour(),dt.getMinute(),dt.getSecond());
+    String frameTitle=versionText;
+    if (conflicts!=null && !conflicts.isEmpty()) {
+      LocalDateTime dt = conflicts.get(0).detectionTime;
+      frameTitle = String.format("%s; Conflicts detected %02d/%02d/%04d at %02d:%02d:%02d",
+          versionText,
+          dt.getDayOfMonth(), dt.getMonthValue(), dt.getYear(), dt.getHour(), dt.getMinute(), dt.getSecond());
+    }
     
     if (mainFrame!=null)
       mainFrame.setTitle(frameTitle);
@@ -258,22 +269,32 @@ public class ShowConflicts implements ItemListener{
       mainFrame.setVisible(true);
     }
     else
-    if (mapView!=null && mapView.conflict!=null) {
-      //check if the current set of conflicts contains data about a conflict between the same flights
-      //as currently shown in the map view
-      Conflict c=mapView.conflict;
+    if (mapView!=null) {
       int cIdx=-1;
-      for (int i=0; i<conflicts.size() && cIdx<0; i++)
-        if (c.sameFlights(conflicts.get(i)))
-          cIdx=i;
+      if (mapView.conflict!=null) {
+        //check if the current set of conflicts contains data about a conflict between the same flights
+        //as currently shown in the map view
+        Conflict c = mapView.conflict;
+        for (int i = 0; i < conflicts.size() && cIdx < 0; i++)
+          if (c.sameFlights(conflicts.get(i)))
+            cIdx = i;
+      }
       if (cIdx<0) {
-        oneConflictTitle.setText("The earlier shown information expired!");
-        oneConflictTitle.repaint();
-        mapView.setConflict(null);
-        altiView.setConflict(null);
-        if (aTableModel!=null) {
-          aTableModel.setActions(null);
-          aTableModel.fireTableDataChanged();
+        if (conflicts==null || conflicts.isEmpty()) {
+          oneConflictTitle.setText("The earlier shown information expired!");
+          oneConflictTitle.repaint();
+          mapView.setConflict(null);
+          altiView.setConflict(null);
+          if (aTableModel != null) {
+            aTableModel.setActions(null);
+            aTableModel.fireTableDataChanged();
+            if (rankChoice != null)
+              rankChoice.setEnabled(false);
+          }
+        }
+        else {
+          showConflictGeometry(conflicts.get(0));
+          cTable.setRowSelectionInterval(0, 0);
         }
       }
       else {
@@ -362,6 +383,15 @@ public class ShowConflicts implements ItemListener{
           }
         }
       });
+  
+      
+      aTableModel.setMaxRankToShow(Math.min(5,aTableModel.maxRank));
+      int value=aTableModel.maxRankToShow;
+      if (value<0)
+        value=aTableModel.maxRank;
+      SpinnerModel rankChoiceModel=new SpinnerNumberModel(value,0,aTableModel.maxRank,1);
+      rankChoice=new JSpinner(rankChoiceModel);
+      rankChoice.addChangeListener(this);
     }
     if (oneConflictPanel==null) {
       oneConflictPanel=new JPanel();
@@ -375,7 +405,13 @@ public class ShowConflicts implements ItemListener{
       JSplitPane spl2=null;
       if (aTable!=null) {
         JScrollPane scrollPane = new JScrollPane(aTable);
-        spl2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, spl1, scrollPane);
+        JPanel rp=new JPanel(new FlowLayout(FlowLayout.CENTER,5,0));
+        rp.add(new JLabel("Show actions with ranks up to"));
+        rp.add(rankChoice);
+        JPanel p=new JPanel(new BorderLayout());
+        p.add(rp,BorderLayout.NORTH);
+        p.add(scrollPane,BorderLayout.CENTER);
+        spl2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, spl1, p);
         spl2.setDividerLocation(Math.round(0.3f * size.width));
       }
       oneConflictPanel.add((spl2==null)?spl1:spl2,BorderLayout.CENTER);
@@ -397,7 +433,21 @@ public class ShowConflicts implements ItemListener{
     if (aTableModel!=null) {
       aTableModel.setActions(conflict.actions);
       aTableModel.fireTableDataChanged();
+      if (rankChoice!=null) {
+        int value=aTableModel.maxRankToShow;
+        if (value<0)
+          value=aTableModel.maxRank;
+        SpinnerModel rankChoiceModel=new SpinnerNumberModel(value,0,
+            aTableModel.maxRank,1);
+        rankChoice.setModel(rankChoiceModel);
+        rankChoice.setEnabled(true);
+      }
     }
+  }
+  
+  public void stateChanged(ChangeEvent e) {
+    if (e.getSource().equals(rankChoice))
+      aTableModel.setMaxRankToShow((int)rankChoice.getValue());
   }
   
 }
