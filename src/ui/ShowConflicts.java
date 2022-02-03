@@ -3,6 +3,7 @@ package ui;
 import data.Conflict;
 import data.ConflictPoint;
 import data.DataPortion;
+import data.DataUpdater;
 import map.AltiView;
 import map.MapView;
 import table_cells.NumberByBarCellRenderer;
@@ -18,12 +19,16 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 
-public class ShowConflicts implements ItemListener, ChangeListener {
+public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
   public static final String versionText="TAPAS CDR UI version 03/02/2022 13:05";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
   public ArrayList<DataPortion> portions=null;
+  /**
+   * The data updater from which data portions are received
+   */
+  public DataUpdater dataUpdater=null;
   /**
    * The set of conflicts to be shown
    */
@@ -39,10 +44,12 @@ public class ShowConflicts implements ItemListener, ChangeListener {
   
   public JTable cTable=null, aTable=null;
   public JFrame mainFrame=null;
-  public JPanel oneConflictPanel=null;
+  public JPanel controlPanel=null, oneConflictPanel=null;
   public JLabel oneConflictTitle=null;
   
   protected JComboBox portionChoice=null;
+  protected JButton bAuto=null;
+  protected JSpinner stepChoice=null;
   protected JSpinner rankChoice=null;
   
   protected ShowConflicts secondary =null, primary =null;
@@ -61,12 +68,37 @@ public class ShowConflicts implements ItemListener, ChangeListener {
     }
     portionChoice.setSelectedIndex(0);
     portionChoice.addItemListener(this);
-    JPanel p=new JPanel();
-    p.setLayout(new FlowLayout(FlowLayout.CENTER,0,0));
-    p.add(portionChoice);
-    mainFrame.getContentPane().add(p,BorderLayout.SOUTH);
-    mainFrame.pack();
-    mainFrame.repaint();
+    if (controlPanel==null) {
+      controlPanel = new JPanel();
+      controlPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
+      controlPanel.add(portionChoice);
+      mainFrame.getContentPane().add(controlPanel, BorderLayout.SOUTH);
+      mainFrame.pack();
+      mainFrame.repaint();
+    }
+  }
+  /**
+   * Sets a data updater from which data portions will be received
+   */
+  public void setDataUpdater(DataUpdater dataUpdater) {
+    this.dataUpdater = dataUpdater;
+    if (dataUpdater!=null) {
+      dataUpdater.addChangeListener(this);
+      if (controlPanel!=null) {
+        bAuto=new JButton("Update automatically");
+        bAuto.setActionCommand("auto");
+        bAuto.addActionListener(this);
+        controlPanel.add(bAuto);
+        controlPanel.add(new JLabel("every"));
+        SpinnerModel sm=new SpinnerNumberModel(dataUpdater.timeStep,5,300,5);
+        stepChoice=new JSpinner(sm);
+        stepChoice.addChangeListener(this);
+        controlPanel.add(stepChoice);
+        controlPanel.add(new JLabel("seconds"));
+        controlPanel.invalidate();
+        controlPanel.validate();
+      }
+    }
   }
   
   public void itemStateChanged(ItemEvent e){
@@ -74,6 +106,32 @@ public class ShowConflicts implements ItemListener, ChangeListener {
       int pIdx=portionChoice.getSelectedIndex();
       setConflicts(portions.get(pIdx).conflicts);
     }
+  }
+  
+  public void actionPerformed (ActionEvent e) {
+    //todo ...
+  }
+  
+  public void stateChanged(ChangeEvent e) {
+    if (e.getSource().equals(rankChoice))
+      aTableModel.setMaxRankToShow((int)rankChoice.getValue());
+    else
+      if (e.getSource().equals(dataUpdater)) {
+        if (dataUpdater.isRunning()) {
+          setConflicts(dataUpdater.getCurrentDataPortion().conflicts);
+          if (portionChoice!=null)
+            portionChoice.setSelectedIndex(dataUpdater.lastIdx);
+        }
+        else
+          if (portionChoice!=null) {
+            portionChoice.setSelectedIndex(dataUpdater.lastIdx);
+            portionChoice.setEnabled(true);
+          }
+      }
+      else
+        if (e.getSource().equals(stepChoice)){
+          //todo ...
+        }
   }
   
   public void setIsSecondary(boolean secondary) {
@@ -443,11 +501,6 @@ public class ShowConflicts implements ItemListener, ChangeListener {
         rankChoice.setEnabled(true);
       }
     }
-  }
-  
-  public void stateChanged(ChangeEvent e) {
-    if (e.getSource().equals(rankChoice))
-      aTableModel.setMaxRankToShow((int)rankChoice.getValue());
   }
   
 }

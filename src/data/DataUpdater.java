@@ -1,25 +1,20 @@
 package data;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.util.ArrayList;
+import java.util.TimerTask;
 
 /**
  * Updates the data about detected conflicts every X seconds (currently X==30).
  * Imitates data coming every X seconds by taking portions from a single long sequence.
  */
 
-public class DataUpdater {
+public class DataUpdater extends TimerTask {
   /**
    * The data divided into portions
    */
   public ArrayList<DataPortion> portions=null;
-  /**
-   * Time interval, in seconds, between receiving/sending data portions
-   */
-  public int timeStep=30;
-  /**
-   * The index of the last conflict sent
-   */
-  public int lastIdx=-1;
   
   /**
    * Receives the full set of data and divides it into portions.
@@ -101,5 +96,73 @@ public class DataUpdater {
       }
     
     return portions.size();
+  }
+  
+  public DataPortion getCurrentDataPortion() {
+    if (portions==null || portions.isEmpty())
+      return null;
+    if (lastIdx<0 || lastIdx>=portions.size())
+      lastIdx=0;
+    return portions.get(lastIdx);
+  }
+  
+  protected ArrayList<ChangeListener> changeListeners=null;
+  
+  public void addChangeListener(ChangeListener l) {
+    if (changeListeners==null)
+      changeListeners=new ArrayList(5);
+    if (!changeListeners.contains(l))
+      changeListeners.add(l);
+  }
+  
+  public void removeChangeListener(ChangeListener l) {
+    if (l!=null && changeListeners!=null)
+      changeListeners.remove(l);
+  }
+  
+  public void notifyChange(){
+    if (changeListeners==null || changeListeners.isEmpty())
+      return;
+    ChangeEvent e=new ChangeEvent(this);
+    for (ChangeListener l:changeListeners)
+      l.stateChanged(e);
+  }
+  
+  private boolean isRunning=false, toStop=false;
+  /**
+   * Time interval, in seconds, between receiving/sending data portions
+   */
+  public int timeStep=5;
+  /**
+   * The index of the last conflict sent
+   */
+  public int lastIdx=-1;
+  
+  public void setTimeStep(int timeStep) {
+    this.timeStep = timeStep;
+  }
+  
+  public boolean isRunning() {
+    return isRunning;
+  }
+  
+  public void startAutoUpdating(int fromIdx) {
+  }
+  
+  public void setToStop(boolean toStop) {
+    this.toStop = toStop;
+  }
+  
+  public void run() {
+    if (toStop) {
+      isRunning=false;
+      toStop=false;
+      return;
+    }
+    ++lastIdx;
+    if (lastIdx>=portions.size())
+      isRunning=false;
+    //notify about the next portion or the end of the process
+    notifyChange();
   }
 }

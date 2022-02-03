@@ -46,6 +46,7 @@ public class Main {
         if (nPortions>=0) {
           showConflicts = new ShowConflicts();
           showConflicts.setDataPortions(du.portions);
+          showConflicts.setDataUpdater(du);
         }
       }
       if (showConflicts!=null) {
