@@ -42,7 +42,7 @@ public class ShowConflicts implements ItemListener{
   
   protected JComboBox portionChoice=null;
   
-  protected ShowConflicts showSecondary=null;
+  protected ShowConflicts secondary =null, primary =null;
   
   public void setDataPortions(ArrayList<DataPortion> portions) {
     this.portions = portions;
@@ -73,8 +73,16 @@ public class ShowConflicts implements ItemListener{
     }
   }
   
-  public void setSecondary(boolean secondary) {
+  public void setIsSecondary(boolean secondary) {
     isSecondary = secondary;
+  }
+  
+  public void secondaryClosed(){
+    secondary =null;
+  }
+  
+  public void setPrimary(ShowConflicts primary) {
+    this.primary = primary;
   }
   
   public ArrayList<Conflict> getConflicts() {
@@ -215,7 +223,31 @@ public class ShowConflicts implements ItemListener{
       cTable.setColumnSelectionAllowed(false);
       JScrollPane scrollPane = new JScrollPane(cTable);
       mainFrame = new JFrame(frameTitle);
-      mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+      if (!isSecondary) {
+        mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        mainFrame.addWindowListener(new WindowAdapter() {
+          @Override
+          public void windowClosing(WindowEvent e) {
+            if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
+                "Sure to exit?",
+                "Sure to exit?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+                    == JOptionPane.YES_OPTION)
+              System.exit(0);
+          }
+        });
+      }
+      else {
+        mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        mainFrame.addWindowListener(new WindowAdapter() {
+          @Override
+          public void windowClosing(WindowEvent e) {
+            super.windowClosing(e);
+            mainFrame.dispose();
+            if (primary !=null)
+              primary.secondaryClosed();
+          }
+        });
+      }
       mainFrame.getContentPane().add(scrollPane, BorderLayout.CENTER);
       //Display the window.
       mainFrame.pack();
@@ -224,17 +256,6 @@ public class ShowConflicts implements ItemListener{
       else
         mainFrame.setLocation(30, 30);
       mainFrame.setVisible(true);
-      if (!isSecondary)
-        mainFrame.addWindowListener(new WindowAdapter() {
-          @Override
-          public void windowClosing(WindowEvent e) {
-            if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
-                "Sure to exit?",
-                "Sure to exit?",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE)
-                ==JOptionPane.YES_OPTION)
-              System.exit(0);
-          }
-        });
     }
     else
     if (mapView!=null && mapView.conflict!=null) {
@@ -247,6 +268,7 @@ public class ShowConflicts implements ItemListener{
           cIdx=i;
       if (cIdx<0) {
         oneConflictTitle.setText("The earlier shown information expired!");
+        oneConflictTitle.repaint();
         mapView.setConflict(null);
         altiView.setConflict(null);
         if (aTableModel!=null) {
@@ -312,6 +334,8 @@ public class ShowConflicts implements ItemListener{
       aTable.setRowSelectionAllowed(true);
       aTable.setColumnSelectionAllowed(false);
 
+      ShowConflicts primary=this;
+      
       aTable.addMouseListener(new MouseAdapter() {
         public void mousePressed(MouseEvent e) {
           super.mousePressed(e);
@@ -323,15 +347,16 @@ public class ShowConflicts implements ItemListener{
             if (realRowIndex>=0 && realRowIndex<aTableModel.actions.size()) {
               data.Action a=aTableModel.actions.get(realRowIndex);
               if (a.conflicts==null || a.conflicts.isEmpty()) {
-                if (showSecondary!=null)
-                  showSecondary.setConflicts(null);
+                if (secondary !=null)
+                  secondary.setConflicts(null);
               }
               else {
-                if (showSecondary==null) {
-                  showSecondary=new ShowConflicts();
-                  showSecondary.setSecondary(true);
+                if (secondary ==null) {
+                  secondary =new ShowConflicts();
+                  secondary.setIsSecondary(true);
+                  secondary.setPrimary(primary);
                 }
-                showSecondary.setConflicts(a.conflicts);
+                secondary.setConflicts(a.conflicts);
               }
             }
           }
@@ -366,6 +391,7 @@ public class ShowConflicts implements ItemListener{
       return;
     oneConflictTitle.setText("Conflict of flights " + conflict.flights[0].flightId +
                                  " and " + conflict.flights[1].flightId);
+    oneConflictTitle.repaint();
     mapView.setConflict(conflict);
     altiView.setConflict(conflict);
     if (aTableModel!=null) {

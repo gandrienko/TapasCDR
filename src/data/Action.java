@@ -111,6 +111,24 @@ public class Action {
    */
   public ArrayList<Conflict> conflicts=null;
   
+  public String getConflictsDescriptionHTML(){
+    if (conflicts==null)
+      return null;
+    String s=null;
+    for (int i=0; i<conflicts.size(); i++) {
+      String d=conflicts.get(i).getDescriptionBody();
+      if (d==null)
+        continue;
+      if (s==null)
+        s=d;
+      else
+        s+="<br>"+d;
+    }
+    if (s==null)
+      return null;
+    return "<html><body>"+s+"</body></html>";
+  }
+  
   /**
    * Attaches suggested actions to conflicts and secondary conflicts to actions
    * @param actions - list of all actions

@@ -100,10 +100,12 @@ public class ConflictTableModel  extends AbstractTableModel {
   }
   
   public String getDetailedText(int row, int col) {
-    String cName=colNames[col].toLowerCase();
     Conflict c=conflicts.get(row);
     if (c==null)
       return null;
+    if (col==0)
+      return c.getDescriptionHTML();
+    String cName=colNames[col].toLowerCase();
     if (cName.startsWith("due"))
       return c.getCauseHTML();
     if (cName.equals("flight 1"))

@@ -101,6 +101,8 @@ public class ActionsTableModel extends AbstractTableModel {
     String cName=colNames[col].toLowerCase();
     if (colNames[col].toLowerCase().startsWith("why"))
       return actions.get(row).whyNot;
+    if (colNames[col].toLowerCase().contains("conflicts"))
+      return actions.get(row).getConflictsDescriptionHTML();
     Object v=getValueAt(row,col);
     if (v==null)
       return null;
