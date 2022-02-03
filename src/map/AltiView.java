@@ -6,6 +6,7 @@ import data.FlightPoint;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
@@ -50,6 +51,16 @@ public class AltiView extends JPanel implements MouseMotionListener {
   public AltiView(){
     super();
     addMouseMotionListener(this);
+    addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseExited(MouseEvent e) {
+        super.mouseExited(e);
+        if (tTrans.timeUnix>0) {
+          tTrans.timeUnix=0;
+          tTrans.notifyChange();
+        }
+      }
+    });
   }
   
   public void setConflict(Conflict conflict) {
