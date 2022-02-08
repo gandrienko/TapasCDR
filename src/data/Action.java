@@ -18,6 +18,8 @@ public class Action {
   /**
    * resolution_actions_episode_1.csv: RTkey
    */
+  public String rtKey=null;
+
   public String flightId=null;
   /**
    * resolution_actions_episode_1.csv: ResolutionActionType
@@ -145,6 +147,9 @@ public class Action {
           if (c.actions==null)
             c.actions=new ArrayList<Action>(20);
           c.actions.add(a);
+          for (FlightInConflict f:c.flights)
+            if (f.rtKey==a.rtKey)
+              a.flightId=f.flightId;
           ++n;
         }
         else
@@ -152,10 +157,14 @@ public class Action {
           if (a.conflicts==null)
             a.conflicts=new ArrayList<Conflict>(5);
           a.conflicts.add(c);
-          if (a.actionId.equals(c.actionId1))
-            c.causeAction1=a;
-          else
-            c.causeAction2=a;
+          if (a.actionId.equals(c.actionId1)) {
+            c.causeAction1 = a;
+            a.flightId=c.flights[0].flightId;
+          }
+          else {
+            c.causeAction2 = a;
+            a.flightId=c.flights[1].flightId;
+          }
         }
       }
     }

@@ -305,29 +305,36 @@ public class Conflict {
       return null;
     String s=String.format("<p align=center>Conflict of <b>%s</b> and <b>%s</b></p>",
         flights[0].flightId,flights[1].flightId);
-    s += "<table border=0 cellmargin=3 cellpadding=1 cellspacing=3 align=left>";
-    s+=String.format("<tr><td>Severity</td><td align=right><b>%.0f</b></td></tr>",
-        getSeverity());
-    s+=String.format("<tr><td>Measure of compliance</td><td align=right><b>%.2f</b></td></tr>",
-        getComplianceMeasure());
-    if (!Double.isNaN(relSpeedH))
-      s+=String.format("<tr><td>Hor. relative speed</td><td align=right><b>%.2f</b></td><td>nm/min.</td></tr>",relSpeedH);
-    if (!Double.isNaN(relSpeedV))
-      s+=String.format("<tr><td>Vert. relative speed</td><td align=right><b>%.0f</b></td><td>feet/min.</td></tr>",relSpeedV);
-    s += "</table>";
-    s += "<table border=0 cellmargin=3 cellpadding=1 cellspacing=3 align=right>";
-    s+="<tr align=right><td></td><td>Time</td><td>Hor. distance</td><td>Vert. distance</td></tr>";
-    ConflictPoint cp=flights[0].first;
-    s+=String.format("<tr align=right><td>Start</td><td>%02d:%02d:%02d</td><td>%.2f</td><td>%d</td></tr>",
-        cp.time.getHour(),cp.time.getMinute(),cp.time.getSecond(),cp.hDistance,cp.vDistance);
-    cp=flights[0].closest;
-    s+=String.format("<tr align=right><td>CPA</td><td>%02d:%02d:%02d</td><td>%.2f</td><td>%d</td></tr>",
-        cp.time.getHour(),cp.time.getMinute(),cp.time.getSecond(),cp.hDistance,cp.vDistance);
-    cp=flights[0].last;
-    s+=String.format("<tr align=right><td>Last(*)</td><td>%02d:%02d:%02d</td><td>%.2f</td><td>%d</td></tr>",
-        cp.time.getHour(),cp.time.getMinute(),cp.time.getSecond(),cp.hDistance,cp.vDistance);
-    s += "</table>";
-    s+=String.format("<p> * within the time horizon of %d sec.</p>",timeHorizon);
+    if (!Double.isNaN(getSeverity())) {
+      s += "<table border=0 cellmargin=3 cellpadding=1 cellspacing=3 align=left>";
+      s += String.format("<tr><td>Severity</td><td align=right><b>%.0f</b></td></tr>",
+          getSeverity());
+      s += String.format("<tr><td>Measure of compliance</td><td align=right><b>%.2f</b></td></tr>",
+          getComplianceMeasure());
+      if (!Double.isNaN(relSpeedH))
+        s += String.format("<tr><td>Hor. relative speed</td><td align=right><b>%.2f</b></td><td>nm/min.</td></tr>", relSpeedH);
+      if (!Double.isNaN(relSpeedV))
+        s += String.format("<tr><td>Vert. relative speed</td><td align=right><b>%.0f</b></td><td>feet/min.</td></tr>", relSpeedV);
+      s += "</table>";
+    }
+    if (flights[0].closest!=null) {
+      s += "<table border=0 cellmargin=3 cellpadding=1 cellspacing=3 align=right>";
+      s += "<tr align=right><td></td><td>Time</td><td>Hor. distance</td><td>Vert. distance</td></tr>";
+      ConflictPoint cp = flights[0].first;
+      if (cp != null)
+        s += String.format("<tr align=right><td>Start</td><td>%02d:%02d:%02d</td><td>%.2f</td><td>%d</td></tr>",
+            cp.time.getHour(), cp.time.getMinute(), cp.time.getSecond(), cp.hDistance, cp.vDistance);
+      cp = flights[0].closest;
+      if (cp != null)
+        s += String.format("<tr align=right><td>CPA</td><td>%02d:%02d:%02d</td><td>%.2f</td><td>%d</td></tr>",
+            cp.time.getHour(), cp.time.getMinute(), cp.time.getSecond(), cp.hDistance, cp.vDistance);
+      cp = flights[0].last;
+      if (cp != null)
+        s += String.format("<tr align=right><td>Last(*)</td><td>%02d:%02d:%02d</td><td>%.2f</td><td>%d</td></tr>",
+            cp.time.getHour(), cp.time.getMinute(), cp.time.getSecond(), cp.hDistance, cp.vDistance);
+      s += "</table>";
+      s+=String.format("<p> * within the time horizon of %d sec.</p>",timeHorizon);
+    }
     return s;
   }
   

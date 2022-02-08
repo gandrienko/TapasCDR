@@ -132,6 +132,8 @@ public class ConflictTableModel  extends AbstractTableModel {
     ConflictPoint cp=(cName.contains("cpa"))?f.closest:
                          (cName.contains("start"))?f.first:
                              (cName.contains("end"))?f.last:null;
+    if (cp==null)
+      return false;
     char dueTo=cp.getMOC_DueTo();
     if (dueTo=='B')
       return true;

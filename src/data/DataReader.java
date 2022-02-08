@@ -257,7 +257,7 @@ public class DataReader {
           continue;
         if (colName.equalsIgnoreCase("ResolutionID")) a.actionId=sValue; else
         if (colName.equalsIgnoreCase("ConflictID")) a.conflictId=sValue; else
-        if (colName.equalsIgnoreCase("RTkey")) a.flightId=sValue; else
+        if (colName.equalsIgnoreCase("RTkey")) a.rtKey=sValue; else
         if (colName.equalsIgnoreCase("ResolutionActionType")) a.actionType=sValue; else
         if (colName.equalsIgnoreCase("ResolutionAction"))
           a.actionValue=Integer.parseInt(sValue);
@@ -298,7 +298,8 @@ public class DataReader {
         if (colName.equalsIgnoreCase("FilteredOut"))
           a.whyNot=sValue;
       }
-      if (a.actionId!=null && a.conflictId!=null && a.flightId!=null && a.actionType!=null) {
+      if (a.actionId!=null && a.conflictId!=null && a.rtKey!=null && a.actionType!=null) {
+        a.flightId=a.rtKey;
         int idx=actions.size();
         for (int i=0; i<actions.size(); i++)
           if (actions.get(i).rank>a.rank) {
