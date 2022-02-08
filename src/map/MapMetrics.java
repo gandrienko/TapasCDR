@@ -86,7 +86,6 @@ public class MapMetrics {
       if (ry1<-85.051) ry1=-85.051;
       else
         if (ry2>85.051) ry1=85.051;
-      double dy=ry2-ry1;
       ry1=lat2Y(ry1);
       ry2=lat2Y(ry2);
     }
@@ -94,6 +93,16 @@ public class MapMetrics {
     double stepx=(rx2-rx1)/viewport.width,
         stepy=(ry2-ry1)/viewport.height;
     step=stepY=Math.max(stepx,stepy);
+    double dd=(viewport.width-(rx2-rx1)/step)/2;
+    if (dd>0)
+      tx1-=step*dd;
+    else {
+      dd = (viewport.height - (ry2 - ry1) / step) / 2;
+      if (dd>0) {
+        prLat1-=step*dd;
+        ty1=y2Lat(prLat1);
+      }
+    }
     scrMaxY=(int)Math.ceil((prLat2-prLat1)/stepY);
   }
   /**
