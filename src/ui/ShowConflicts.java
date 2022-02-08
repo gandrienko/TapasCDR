@@ -20,7 +20,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 03/02/2022 18:20";
+  public static final String versionText="TAPAS CDR UI version 08/02/2022 13:25";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -523,15 +523,18 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     if (aTableModel!=null) {
       aTableModel.setActions(conflict.actions);
       aTableModel.fireTableDataChanged();
-      if (rankChoice!=null) {
-        int value=aTableModel.maxRankToShow;
-        if (value<0)
-          value=aTableModel.maxRank;
-        SpinnerModel rankChoiceModel=new SpinnerNumberModel(value,0,
-            aTableModel.maxRank,1);
-        rankChoice.setModel(rankChoiceModel);
-        rankChoice.setEnabled(true);
-      }
+      if (rankChoice!=null)
+        if (aTableModel.maxRank<1)
+          rankChoice.setEnabled(false);
+        else {
+          int value=aTableModel.maxRankToShow;
+          if (value<0)
+            value=aTableModel.maxRank;
+          SpinnerModel rankChoiceModel=new SpinnerNumberModel(value,0,
+              aTableModel.maxRank,1);
+          rankChoice.setModel(rankChoiceModel);
+          rankChoice.setEnabled(true);
+        }
     }
   }
   

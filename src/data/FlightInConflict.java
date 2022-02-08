@@ -113,6 +113,8 @@ public class FlightInConflict {
       return measureOfCompliance;
     for (int i=0; i<3; i++) {
       ConflictPoint cp=(i==0)?first:(i==1)?closest:last;
+      if (cp==null)
+        continue;
       double c=cp.getComplianceMeasure();
       if (!Double.isNaN(c) && (Double.isNaN(measureOfCompliance) || measureOfCompliance>c))
         measureOfCompliance=c;

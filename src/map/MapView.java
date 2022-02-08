@@ -322,6 +322,8 @@ public class MapView extends JPanel
           }
           else {
             ConflictPoint cp=(j==0)?f.first:(j==1)?f.closest:f.last;
+            if (cp==null)
+              continue;
             if (cp.pointTimeUnix>t0 && tTrans.timeUnix<cp.pointTimeUnix) {
               double ratio=1.0*(tTrans.timeUnix-t0)/(cp.pointTimeUnix-t0);
               lon[i]=lon0+(cp.lon-lon0)*ratio;
