@@ -14,7 +14,19 @@ public class FlightInConflict {
   /**
    * Main.csv: RTkey1, RTkey2
    */
+  public String rtKey=null;
+  /**
+   * Main.csv: Callsign1, Callsign2
+   */
+  public String callSign=null;
+  /**
+   * Either callSign (if specified) or rtKey
+   */
   public String flightId=null;
+  /**
+   * Main.csv: DestinationAirport1, DestinationAirport2
+   */
+  public String destination=null;
   /**
    * Main.csv: "fp_projection_flag1","fp_projection_flag2"
    * Whether the projection (prediction of the flight positions into the future)
@@ -147,6 +159,7 @@ public class FlightInConflict {
   public String getDescriptionHTML() {
     String s=String.format("<p align=center>Flight <b>%s</b></p>",flightId);
     s += "<table border=0 cellmargin=3 cellpadding=3 cellspacing=3 align=center>";
+    s+=String.format("<tr align=right><td>Destination</td><td>%s</td></tr>",destination);
     s+=String.format("<tr align=right><td>Phase</td><td>%s</td></tr>",phase);
     s+=String.format("<tr align=right><td>Course</td><td>%.1f</td><td>degrees</td></tr>",course);
     s+=String.format("<tr align=right><td>Horizontal speed</td><td>%.2f</td><td>nm/min.</td></tr>",speed_h*60/1852);

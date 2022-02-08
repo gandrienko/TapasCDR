@@ -66,8 +66,10 @@ public class ConflictTableModel  extends AbstractTableModel {
       return c.getSectorId();
     if (cName.startsWith("due"))
       return c.getCause();
-    if (cName.contains("moc") || cName.contains("compliance"))
-      return c.getComplianceMeasure();
+    if (cName.contains("moc") || cName.contains("compliance")) {
+      double v=c.getComplianceMeasure();
+      return (Double.isNaN(v))?null:v;
+    }
     if (cName.contains("severity"))
       return (int)Math.round(c.getSeverity());
     if (cName.contains("rate"))
@@ -154,7 +156,7 @@ public class ConflictTableModel  extends AbstractTableModel {
       label.setText("conflict");
     else
     if (colNames[col].startsWith("Flight"))
-      label.setText("000000000");
+      label.setText("00000000000");
     else
       if (colNames[col].contains("time") || colNames[col].startsWith("Detect"))
         label.setText("00:00:00");

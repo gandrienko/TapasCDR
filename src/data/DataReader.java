@@ -26,11 +26,14 @@ public class DataReader {
       "lon1","lon2",          //19,20
       "lat1","lat2",          //21,22
       "alt1","alt2",          //23,24
-      "flight_phase_1","flight_phase_2"};     //25,26
+      "flight_phase_1","flight_phase_2",      //25,26
+      "callsign1","callsign2",                //27,28
+      "destination_airport1","destination_airport2"}; //29,30
+  
   public static String colNames_Conflicts[]={
       "conflict_ID",
       "due_to_flight_1","due_to_flight_2","command_category",
-      "RTkey",
+      "RTkey","callsign","destination_airport",
       "time_to_conflict",
       "time_to_first_conflict",
       "time_to_last_conflict",
@@ -92,7 +95,7 @@ public class DataReader {
             c.detectionTime= LocalDateTime.ofEpochSecond(c.detectionTimeUnix,0, ZoneOffset.UTC);
             break;
           case 3: case 4:
-            f.flightId=sValue; break;
+            f.rtKey=sValue; break;
           case 5: c.actionId1=sValue; break;
           case 6: c.actionId2=sValue; break;
           case 7: c.commandCategory=sValue; break;
@@ -117,8 +120,14 @@ public class DataReader {
             f.phase=sValue;
             f.phaseNum=FlightInConflict.getPhaseNum(sValue);
             break;
+          case 27: case 28:
+            f.callSign=sValue; break;
+          case 29: case 30:
+            f.destination=sValue; break;
         }
       }
+      for (int j=0; j<c.flights.length; j++)
+        c.flights[j].flightId=(c.flights[j].callSign==null)?c.flights[j].rtKey:c.flights[j].callSign;
       if (c.conflictId==null || c.detectionTime==null ||
               c.flights[0].flightId==null || c.flights[1].flightId==null)
         continue;
@@ -153,7 +162,9 @@ public class DataReader {
     for (int i=0; i<data.getNRows(); i++) {
       String conflictId=data.getValue(i,cNums[0]),
           actionId1=data.getValue(i,cNums[1]), actionId2=data.getValue(i,cNums[2]),
-          commandCategory=data.getValue(i,cNums[3]), flightId=data.getValue(i,cNums[4]);
+          commandCategory=data.getValue(i,cNums[3]), rtKey=data.getValue(i,cNums[4]),
+          callSign=data.getValue(i,cNums[5]),
+          flightId=(callSign==null)?rtKey:callSign;
       Conflict c=null;
       for (int j=0; j<conflicts.size() && c==null; j++)
         if (conflicts.get(j).sameConflict(conflictId,actionId1,actionId2,commandCategory))
@@ -162,12 +173,12 @@ public class DataReader {
         continue;
       FlightInConflict f=null;
       for (int j=0; j<c.flights.length && f==null; j++)
-        if (c.flights[j].flightId.equals(flightId))
+        if (flightId.equals(c.flights[j].flightId))
           f=c.flights[j];
       if (f==null)
         continue;
       ++nOk;
-      for (int j=5; j<cNums.length; j++) {
+      for (int j=7; j<cNums.length; j++) {
         String sValue=data.getValue(i,cNums[j]);
         if (sValue==null)
           continue;
