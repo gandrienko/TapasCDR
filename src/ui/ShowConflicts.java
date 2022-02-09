@@ -17,7 +17,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 09/02/2022 17:35";
+  public static final String versionText="TAPAS CDR UI version 09/02/2022 19:00";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -30,6 +30,10 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
    * The set of conflicts to be shown
    */
   public ArrayList<Conflict> conflicts=null;
+  /**
+   * The events of non-conformance to prescribed conflict resolution actions
+   */
+  public ArrayList<NCEvent> ncEvents=null;
   
   public boolean isSecondary=false;
   
@@ -49,6 +53,10 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   protected JSpinner stepChoice=null;
   protected JSpinner rankChoice=null;
   protected JLabel maxRankLabel=null;
+  
+  protected NonConfEventTableModel ncTableModel=null;
+  protected JTable ncTable=null;
+  protected JFrame ncFrame=null;
   
   protected ShowConflicts secondary =null, primary =null;
   
@@ -183,6 +191,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   
   public void setData(ArrayList<Conflict> conflicts, ArrayList<NCEvent> ncEvents) {
     this.conflicts = conflicts;
+    this.ncEvents=ncEvents;
     
     if (cTableModel==null)
       cTableModel=new ConflictTableModel();
@@ -315,7 +324,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
   
       cTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.6f),
-          Math.max(Math.min(Math.round(size.height * 0.6f),cTable.getPreferredSize().height+10),size.height/12)));
+          Math.max(Math.min(Math.round(size.height * 0.6f),cTable.getPreferredSize().height+50),size.height/12)));
       cTable.setFillsViewportHeight(true);
       cTable.setAutoCreateRowSorter(true);
       cTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -391,6 +400,68 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
         int rIdx=cTable.convertRowIndexToView(cIdx);
         cTable.setRowSelectionInterval(rIdx, rIdx);
       }
+    }
+    if (!isSecondary)
+      showNonConformance();
+  }
+  
+  public void showNonConformance() {
+    if (ncEvents==null || ncEvents.isEmpty()) {
+      if (ncTableModel!=null) {
+        ncTableModel.setNCEvents(null);
+        ncTableModel.fireTableDataChanged();
+      }
+      if (ncFrame!=null)
+        ncFrame.setVisible(false);
+      return;
+    }
+    if (ncTableModel!=null) {
+      ncTableModel.setNCEvents(ncEvents);
+      ncTableModel.fireTableDataChanged();
+    }
+    else {
+      ncTableModel=new NonConfEventTableModel();
+      ncTableModel.setNCEvents(ncEvents);
+      ncTable=new JTable(ncTableModel);
+      DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+      centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+      TimeCellRenderer timeRenderer=new TimeCellRenderer();
+      for (int i=0; i<ncTableModel.getColumnCount(); i++) {
+        if (ncTableModel.getColumnClass(i).equals(String.class))
+          ncTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        else
+          if (ncTableModel.getColumnClass(i).equals(LocalDateTime.class))
+            ncTable.getColumnModel().getColumn(i).setCellRenderer(timeRenderer);
+      }
+      ncTable.setFillsViewportHeight(true);
+      ncTable.setAutoCreateRowSorter(true);
+      ncTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+      ncTable.setRowSelectionAllowed(false);
+      ncTable.setColumnSelectionAllowed(false);
+      Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
+      ncTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.5f),
+          Math.min(Math.round(size.height * 0.25f),cTable.getPreferredSize().height+50)));
+    }
+    if (ncFrame!=null)
+      ncFrame.setVisible(true);
+    else {
+      ncFrame=new JFrame("Non-conformance events");
+      JScrollPane scrollPane = new JScrollPane(ncTable);
+      ncFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+      ncFrame.addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowClosing(WindowEvent e) {
+          super.windowClosing(e);
+          ncFrame.dispose();
+          ncFrame=null;
+        }
+      });
+      ncFrame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+      //Display the window.
+      ncFrame.pack();
+      Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
+      ncFrame.setLocation(size.width-ncFrame.getWidth()-10,(size.height-ncFrame.getHeight())/2);
+      ncFrame.setVisible(true);
     }
   }
   
