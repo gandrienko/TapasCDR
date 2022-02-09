@@ -81,10 +81,15 @@ public class DataUpdater {
         int cIdx=p.getConflictIdx(a.conflictId);
         if (cIdx<0)
           continue;
+        
         Conflict c=p.conflicts.get(cIdx);
         if (c.actions==null)
           c.actions=new ArrayList<Action>(50);
         c.actions.add(a);
+        for (FlightInConflict f:c.flights)
+          if (f.rtKey.equals(a.rtKey))
+            a.flightId=f.flightId;
+          
         if (c.actionResults!=null)
           for (int j=0; j<c.actionResults.size(); j++) {
             Conflict rc=c.actionResults.get(j);

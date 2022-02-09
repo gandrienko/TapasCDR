@@ -148,7 +148,7 @@ public class Action {
             c.actions=new ArrayList<Action>(20);
           c.actions.add(a);
           for (FlightInConflict f:c.flights)
-            if (f.rtKey==a.rtKey)
+            if (f.rtKey.equals(a.rtKey))
               a.flightId=f.flightId;
           ++n;
         }
