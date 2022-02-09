@@ -319,30 +319,30 @@ public class DataReader {
   public static ArrayList<FlightPoint> getProjectionPoints(CsvReader data) {
     if (data==null || data.columns==null || data.rows==null || data.rows.isEmpty())
       return null;
-    ArrayList<FlightPoint> pts=new ArrayList<FlightPoint>(300);
+    ArrayList<FlightPoint> pts=new ArrayList<FlightPoint>(data.getNRows());
     for (int r=0; r<data.getNRows(); r++) {
       FlightPoint p=new FlightPoint();
       for (int c=0; c<data.getNColumns(); c++) {
-        String colName=data.columns[c], sValue=data.getValue(r,c);
+        String colName=data.columns[c].toLowerCase(), sValue=data.getValue(r,c);
         if (sValue==null || sValue.equalsIgnoreCase("null"))
           continue;
-        if (colName.equalsIgnoreCase("projection_ID")) p.projId=sValue; else
-        if (colName.equalsIgnoreCase("TimePoint"))
+        if (colName.equals("projection_id")) p.projId=sValue; else
+        if (colName.equals("timepoint"))
           p.projTimeUnix =Long.parseLong(sValue);
         else
-        if (colName.equalsIgnoreCase("timestamp"))
+        if (colName.equals("timestamp"))
           p.pointTimeUnix =Long.parseLong(sValue);
         else
-        if (colName.equalsIgnoreCase("sequence_number"))
+        if (colName.equals("sequence_number"))
           p.sequenceN=Integer.parseInt(sValue);
         else
-        if (colName.equalsIgnoreCase("lon"))
+        if (colName.equals("lon"))
           p.lon=Double.parseDouble(sValue);
         else
-        if (colName.equalsIgnoreCase("lat"))
+        if (colName.equals("lat"))
           p.lat=Double.parseDouble(sValue);
         else
-        if (colName.equalsIgnoreCase("alt"))
+        if (colName.equals("alt"))
           p.altitude=Math.round(Float.parseFloat(sValue));
       }
       if (p.projId!=null && p.pointTimeUnix>0 && !Double.isNaN(p.lon) && !Double.isNaN(p.lat))
@@ -351,5 +351,51 @@ public class DataReader {
     if (pts.isEmpty())
       return null;
     return pts;
+  }
+  
+  public static ArrayList<NCEvent> getNonConformanceEvents(CsvReader data) {
+    if (data==null || data.columns==null || data.rows==null || data.rows.isEmpty())
+      return null;
+    ArrayList<NCEvent> events=new ArrayList<NCEvent>(data.getNRows());
+    for (int r=0; r<data.getNRows(); r++) {
+      NCEvent e=new NCEvent();
+      for (int c=0; c<data.getNColumns(); c++) {
+        String colName = data.columns[c].toLowerCase(), sValue = data.getValue(r, c);
+        if (sValue == null || sValue.equalsIgnoreCase("null"))
+          continue;
+        if (colName.equals("id")) {
+          e.id=sValue;
+          int idx=sValue.indexOf('_');
+          if (idx>0) {
+            e.rtKey=sValue.substring(idx+1);
+            e.timeUnix=Long.parseLong(sValue.substring(0,idx));
+          }
+        }
+        else
+        if (colName.contains("action") && colName.endsWith("id")) {
+          e.actionId = sValue;
+          int idx=sValue.indexOf('_');
+          if (idx>0)
+            e.actionTimeUnix=Long.parseLong(sValue.substring(0,idx));
+        }
+        else
+        if (colName.contains("type"))
+          e.type=sValue;
+        else
+        if (colName.endsWith("value"))  {
+          double d=Double.parseDouble(sValue);
+          if (!Double.isNaN(d))
+            if (colName.contains("desired"))
+              e.desiredValue=d;
+            else
+              e.actualValue=d;
+        }
+      }
+      if (e.rtKey!=null && e.type!=null)
+        events.add(e);
+    }
+    if (events.isEmpty())
+      return null;
+    return events;
   }
 }

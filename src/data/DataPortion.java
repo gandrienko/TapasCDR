@@ -16,9 +16,9 @@ public class DataPortion {
    */
   public ArrayList<Conflict> conflicts=null;
   /**
-   * The set of recommended resolution actions
+   * The events of non-conformance to prescribed conflict resolution actions
    */
-  public ArrayList<Action> actions=null;
+  public ArrayList<NCEvent> ncEvents=null;
   
   public int getConflictIdx(String conflictId) {
     if (conflicts==null || conflictId==null)

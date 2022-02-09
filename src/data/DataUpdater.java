@@ -13,15 +13,29 @@ import java.util.TimerTask;
 
 public class DataUpdater {
   /**
+   * The list of all conflicts, including both detected and foreseen (due to some actions)
+   */
+  public ArrayList<Conflict> conflicts=null;
+  /**
+   * The list of all proposed actions
+   */
+  public ArrayList<Action> actions=null;
+  /**
    * The data divided into portions
    */
   public ArrayList<DataPortion> portions=null;
+  /**
+   * The list of detected non-conformance events
+   */
+  public ArrayList<NCEvent> ncEvents=null;
   
   /**
    * Receives the full set of data and divides it into portions.
    * @return the number of data portions
    */
   public int setFullData(ArrayList<Conflict> conflicts, ArrayList<Action> actions) {
+    this.conflicts=conflicts; this.actions=actions;
+    
     if (conflicts==null || conflicts.isEmpty())
       return 0;
     
@@ -87,9 +101,10 @@ public class DataUpdater {
           c.actions=new ArrayList<Action>(50);
         c.actions.add(a);
         for (FlightInConflict f:c.flights)
-          if (f.rtKey.equals(a.rtKey))
-            a.flightId=f.flightId;
-          
+          if (f.rtKey.equals(a.rtKey)) {
+            a.callSign=f.callSign;
+            a.flightId = f.flightId;
+          }
         if (c.actionResults!=null)
           for (int j=0; j<c.actionResults.size(); j++) {
             Conflict rc=c.actionResults.get(j);
@@ -102,6 +117,35 @@ public class DataUpdater {
       }
     
     return portions.size();
+  }
+  
+  /**
+   * @return the number of events for which corresponding actions have been found
+   */
+  public int setNCEvents (ArrayList<NCEvent> events) {
+    this.ncEvents=events;
+    if (events==null || events.isEmpty())
+      return 0;
+    int nActionsFound=0;
+    if (actions!=null && !actions.isEmpty()) {
+      for (Action a:actions)
+        for (NCEvent e:events)
+          if (a.actionId.equals(e.actionId)) {
+            e.action=a;
+            e.callSign=a.callSign;
+            e.flightId=a.flightId;
+            ++nActionsFound;
+          }
+    }
+    if (portions!=null)
+      for (DataPortion p:portions)
+        for (NCEvent e:events)
+          if (p.timeUnix==e.timeUnix) {
+            if (p.ncEvents==null)
+              p.ncEvents=new ArrayList<NCEvent>(10);
+            p.ncEvents.add(e);
+          }
+    return nActionsFound;
   }
   
   public boolean hasNextPortion(){

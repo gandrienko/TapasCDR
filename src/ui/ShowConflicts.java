@@ -1,9 +1,6 @@
 package ui;
 
-import data.Conflict;
-import data.ConflictPoint;
-import data.DataPortion;
-import data.DataUpdater;
+import data.*;
 import map.AltiView;
 import map.MapView;
 import table_cells.NumberByBarCellRenderer;
@@ -20,7 +17,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 09/02/2022 16:00";
+  public static final String versionText="TAPAS CDR UI version 09/02/2022 17:35";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -59,7 +56,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     this.portions = portions;
     if (portions==null || portions.isEmpty())
       return;
-    setConflicts(portions.get(0).conflicts);
+    setData(portions.get(0).conflicts,portions.get(0).ncEvents);
     portionChoice=new JComboBox();
     for (int i=0; i<portions.size(); i++) {
       DataPortion p=portions.get(i);
@@ -110,7 +107,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   public void itemStateChanged(ItemEvent e){
     if (e.getSource().equals(portionChoice)) {
       int pIdx=portionChoice.getSelectedIndex();
-      setConflicts(portions.get(pIdx).conflicts);
+      setData(portions.get(pIdx).conflicts,portions.get(pIdx).ncEvents);
       if (updateLabel!=null)
         updateLabel.setText("Data portion N "+(pIdx+1));
     }
@@ -141,7 +138,8 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     else
       if (e.getSource().equals(dataUpdater)) {
         if (dataUpdater.isRunning() && dataUpdater.hasNextPortion()) {
-          setConflicts(dataUpdater.getCurrentDataPortion().conflicts);
+          DataPortion dp=dataUpdater.getCurrentDataPortion();
+          setData(dp.conflicts,dp.ncEvents);
           if (portionChoice!=null)
             portionChoice.setSelectedIndex(dataUpdater.lastIdx);
           updateLabel.setText("Data portion N "+(dataUpdater.lastIdx+1));
@@ -183,7 +181,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     return conflicts;
   }
   
-  public void setConflicts(ArrayList<Conflict> conflicts) {
+  public void setData(ArrayList<Conflict> conflicts, ArrayList<NCEvent> ncEvents) {
     this.conflicts = conflicts;
     
     if (cTableModel==null)
@@ -460,7 +458,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
               data.Action a=aTableModel.actions.get(realRowIndex);
               if (a.conflicts==null || a.conflicts.isEmpty()) {
                 if (secondary !=null)
-                  secondary.setConflicts(null);
+                  secondary.setData(null,null);
               }
               else {
                 if (secondary ==null) {
@@ -468,7 +466,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
                   secondary.setIsSecondary(true);
                   secondary.setPrimary(primary);
                 }
-                secondary.setConflicts(a.conflicts);
+                secondary.setData(a.conflicts,null);
               }
             }
           }

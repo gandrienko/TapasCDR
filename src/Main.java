@@ -29,6 +29,7 @@ public class Main {
       System.out.println("Successfully identified conflicts and flights for "+nOk+" records");
   
       ShowConflicts showConflicts=null;
+      DataUpdater du=null;
   
       csvReader=new CsvReader(path,"resolution_actions_episode_1.csv");
       ArrayList<Action> actions=DataReader.getActions(csvReader);
@@ -39,7 +40,7 @@ public class Main {
         //nOk=Action.linkActionsToConflicts(actions,conflicts);
         //System.out.println("Linked "+nOk+" actions to the corresponding conflicts");
   
-        DataUpdater du=new DataUpdater();
+        du=new DataUpdater();
         int nPortions=du.setFullData(conflicts,actions);
         System.out.println("Got "+nPortions+" data portions!");
         
@@ -59,6 +60,15 @@ public class Main {
         }
         else
           System.out.println("Failed to load projection points!");
+        csvReader=new CsvReader(path,"non_conformance_events.csv");
+        ArrayList<NCEvent> ncEvents=DataReader.getNonConformanceEvents(csvReader);
+        if (ncEvents!=null) {
+          System.out.println("Got "+ncEvents.size()+" non-conformance events!");
+          nOk=du.setNCEvents(ncEvents);
+          System.out.println("For "+nOk+" events the corresponding resolution actions have been found!");
+        }
+        else
+          System.out.println("No non-conformance events found!");
       }
     }
       

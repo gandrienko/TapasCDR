@@ -19,7 +19,14 @@ public class Action {
    * resolution_actions_episode_1.csv: RTkey
    */
   public String rtKey=null;
-
+  /**
+   * Main.csv: Callsign1, Callsign2
+   * Needs to be taken from other data structures
+   */
+  public String callSign=null;
+  /**
+   * Either callSign (if specified) or rtKey
+   */
   public String flightId=null;
   /**
    * resolution_actions_episode_1.csv: ResolutionActionType
@@ -154,8 +161,10 @@ public class Action {
             c.actions=new ArrayList<Action>(20);
           c.actions.add(a);
           for (FlightInConflict f:c.flights)
-            if (f.rtKey.equals(a.rtKey))
-              a.flightId=f.flightId;
+            if (f.rtKey.equals(a.rtKey)) {
+              a.callSign=f.callSign;
+              a.flightId = f.flightId;
+            }
           ++n;
         }
         else
