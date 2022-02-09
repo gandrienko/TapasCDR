@@ -20,7 +20,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 09/02/2022 15:20";
+  public static final String versionText="TAPAS CDR UI version 09/02/2022 15:50";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -51,6 +51,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   protected JButton bAuto=null;
   protected JSpinner stepChoice=null;
   protected JSpinner rankChoice=null;
+  protected JLabel maxRankLabel=null;
   
   protected ShowConflicts secondary =null, primary =null;
   
@@ -482,6 +483,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       SpinnerModel rankChoiceModel=new SpinnerNumberModel(value,0,aTableModel.maxRank,1);
       rankChoice=new JSpinner(rankChoiceModel);
       rankChoice.addChangeListener(this);
+      maxRankLabel=new JLabel("max = ???");
     }
     if (oneConflictPanel==null) {
       oneConflictPanel=new JPanel();
@@ -498,6 +500,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
         JPanel rp=new JPanel(new FlowLayout(FlowLayout.CENTER,5,0));
         rp.add(new JLabel("Show actions with ranks up to"));
         rp.add(rankChoice);
+        rp.add(maxRankLabel);
         JPanel p=new JPanel(new BorderLayout());
         p.add(rp,BorderLayout.NORTH);
         p.add(scrollPane,BorderLayout.CENTER);
@@ -523,11 +526,13 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     if (aTableModel!=null) {
       aTableModel.setActions(conflict.actions);
       aTableModel.fireTableDataChanged();
+      if (maxRankLabel!=null)
+        maxRankLabel.setText("max = "+aTableModel.maxRank);
       if (rankChoice!=null)
         if (aTableModel.maxRank<1)
           rankChoice.setEnabled(false);
         else {
-          int value=aTableModel.maxRankToShow;
+          int value=Math.min(aTableModel.maxRankToShow,aTableModel.maxRank);
           if (value<0)
             value=aTableModel.maxRank;
           SpinnerModel rankChoiceModel=new SpinnerNumberModel(value,0,
