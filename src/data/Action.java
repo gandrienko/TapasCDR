@@ -3,10 +3,10 @@ package data;
 import java.util.ArrayList;
 
 public class Action {
-  public static final String action_types[]={"A1","A2","A3","A4","S2"};
+  public static final String action_types[]={"A1","A2","A3","A4","S2","CA","RFP"};
   public static final String type_meanings[]={
       "flight level change","speed change","direct to waypoint",
-      "no action","course change"};
+      "no action","course change","continue action","resume to flight plan"};
   /**
    * resolution_actions_episode_1.csv: ResolutionID
    */
@@ -31,6 +31,7 @@ public class Action {
    * A2: [10, -10] - knots
    * A4: 0
    * S2: [10, -10] - degrees
+   * CA, RFP: null
    */
   public int actionValue=0;
   /**
