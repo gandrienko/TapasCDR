@@ -290,6 +290,9 @@ public class DataReader {
           a.addMiles=Double.parseDouble(sValue);
         else
         if (colName.equalsIgnoreCase("Duration"))
+          a.duration=Math.round(Double.parseDouble(sValue));
+        else
+        if (colName.equalsIgnoreCase("AdditionalDuration"))
           a.addTime=Math.round(Double.parseDouble(sValue));
         else
         if (colName.equalsIgnoreCase("Prioritization"))

@@ -78,6 +78,11 @@ public class Action {
   public double addMiles=Double.NaN;
   /**
    * resolution_actions_episode_1.csv: Duration
+   * Duration of the action, in seconds
+   */
+  public long duration=0;
+  /**
+   * resolution_actions_episode_1.csv: AdditionalDuration
    * Additional time, in seconds
    */
   public long addTime=0;
