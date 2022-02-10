@@ -432,6 +432,9 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
         else
           if (ncTableModel.getColumnClass(i).equals(LocalDateTime.class))
             ncTable.getColumnModel().getColumn(i).setCellRenderer(timeRenderer);
+        int w=ncTableModel.getPreferredColumnWidth(i);
+        if (w>0)
+          ncTable.getColumnModel().getColumn(i).setPreferredWidth(w);
       }
       ncTable.setFillsViewportHeight(true);
       ncTable.setAutoCreateRowSorter(true);
@@ -439,7 +442,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       ncTable.setRowSelectionAllowed(false);
       ncTable.setColumnSelectionAllowed(false);
       Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
-      ncTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.5f),
+      ncTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.35f),
           Math.min(Math.round(size.height * 0.25f),cTable.getPreferredSize().height+50)));
     }
     if (ncFrame!=null)

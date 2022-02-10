@@ -3,6 +3,7 @@ package ui;
 import data.Action;
 import data.NCEvent;
 
+import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -65,5 +66,28 @@ public class NonConfEventTableModel extends AbstractTableModel {
     if (cName.equals("Actual value"))
       return e.actualValue;
     return null;
+  }
+  
+  public int getPreferredColumnWidth(int col) {
+    JLabel label=new JLabel(colNames[col]);
+    if (colNames[col].startsWith("Flight"))
+      label.setText("000000000");
+    else
+    if (colNames[col].equals("Action")) {
+      String s=Action.type_meanings[0];
+      for (int i=1; i<Action.type_meanings.length; i++)
+        if (Action.type_meanings[i].length()>s.length())
+          s=Action.type_meanings[i];
+      label.setText("RFP: "+s);
+    }
+    else
+    if (colNames[col].equals("Action time")) {
+      label.setText("00:00:00");
+    }
+    else
+    if (colNames[col].equals("Violated")) {
+      label.setText("Horizontal speed");
+    }
+    return label.getPreferredSize().width+10;
   }
 }

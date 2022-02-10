@@ -131,7 +131,7 @@ public class ActionsTableModel extends AbstractTableModel {
       for (int i=1; i<Action.type_meanings.length; i++)
         if (Action.type_meanings[i].length()>s.length())
           s=Action.type_meanings[i];
-      label.setText("A4: "+s);
+      label.setText("RFP: "+s);
     }
     /*
     else
