@@ -35,7 +35,7 @@ public class ActionsTableModel extends AbstractTableModel {
       maxRankToShow = -1; //to force updating
       setMaxRankToShow(max);
     }
-    hideButtons();
+    setVisibilityOfButtons();
     fireTableDataChanged();
   }
   
@@ -49,10 +49,13 @@ public class ActionsTableModel extends AbstractTableModel {
     this.actionListener = actionListener;
   }
   
-  public void hideButtons() {
-    if (buttons!=null)
-      for (int i=actions.size(); i<buttons.size(); i++)
+  public void setVisibilityOfButtons() {
+    if (buttons!=null) {
+      for (int i = getRowCount(); i < buttons.size(); i++)
         buttons.get(i).setVisible(false);
+      for (int i=0; i<getRowCount() && i<buttons.size(); i++)
+        buttons.get(i).setVisible(true);
+    }
   }
   
   public void setMaxRankToShow(int max) {
@@ -76,7 +79,7 @@ public class ActionsTableModel extends AbstractTableModel {
     for (int i=0; i<allActions.size(); i++)
       if (allActions.get(i).rank<=maxRankToShow)
         actions.add(allActions.get(i));
-    hideButtons();
+    setVisibilityOfButtons();
     fireTableDataChanged();
   }
   
@@ -129,7 +132,6 @@ public class ActionsTableModel extends AbstractTableModel {
       }
       JButton b=buttons.get(row);
       b.setToolTipText(getActionDescription(a));
-      b.setVisible(true);
       return b;
     }
     if (cName.equals("Flight"))

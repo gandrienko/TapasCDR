@@ -17,7 +17,8 @@ public class ButtonInCellRenderer implements TableCellRenderer, TableCellEditor 
                                                  int row, int column) {
     if (value==null || !(value instanceof JButton))
       return null;
-    return (JButton)value;
+    JButton b=(JButton)value;
+    return b;
   }
   public Component getTableCellEditorComponent(JTable table,
                                         Object value,
