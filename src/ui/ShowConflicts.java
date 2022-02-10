@@ -1,6 +1,7 @@
 package ui;
 
 import data.*;
+import data.Action;
 import map.AltiView;
 import map.MapView;
 import table_cells.ButtonInCellRenderer;
@@ -18,7 +19,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 09/02/2022 19:00";
+  public static final String versionText="TAPAS CDR UI version 10/02/2022 16:25";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -144,7 +145,15 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       if (e.getActionCommand().startsWith("do")) {
         int idx=cmd.indexOf('_');
         int aIdx=Integer.parseInt(cmd.substring(idx+1));
-        System.out.println("Do action " + aIdx);
+        Action a=aTableModel.getAction(aIdx);
+        if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
+            aTableModel.getActionDescription(a)+"?", "Do the action?",
+            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+                == JOptionPane.YES_OPTION) {
+          System.out.println("Confirmed: "+aTableModel.getActionDescription(a));
+        }
+        else
+          System.out.println("Cancelled: "+aTableModel.getActionDescription(a));
       }
   }
   
@@ -214,7 +223,6 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
         altiView.setConflict(null);
       if (aTableModel!=null) {
         aTableModel.setActions(null);
-        aTableModel.fireTableDataChanged();
         if (rankChoice!=null)
           rankChoice.setEnabled(false);
       }
@@ -393,7 +401,6 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
           altiView.setConflict(null);
           if (aTableModel != null) {
             aTableModel.setActions(null);
-            aTableModel.fireTableDataChanged();
             if (rankChoice != null)
               rankChoice.setEnabled(false);
           }
@@ -562,9 +569,9 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       });
   
       
-      aTableModel.setMaxRankToShow(Math.min(5,aTableModel.maxRank));
+      aTableModel.setMaxRankToShow(5);
       int value=aTableModel.maxRankToShow;
-      if (value<0)
+      if (value<0 || value>aTableModel.maxRank)
         value=aTableModel.maxRank;
       SpinnerModel rankChoiceModel=new SpinnerNumberModel(value,0,aTableModel.maxRank,1);
       rankChoice=new JSpinner(rankChoiceModel);
@@ -611,7 +618,6 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     altiView.setConflict(conflict);
     if (aTableModel!=null) {
       aTableModel.setActions(conflict.actions);
-      aTableModel.fireTableDataChanged();
       if (maxRankLabel!=null)
         maxRankLabel.setText("max = "+aTableModel.maxRank);
       if (rankChoice!=null)

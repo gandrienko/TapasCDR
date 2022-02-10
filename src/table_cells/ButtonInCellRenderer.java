@@ -31,7 +31,7 @@ public class ButtonInCellRenderer implements TableCellRenderer, TableCellEditor 
     return currButton;
   }
   public Object getCellEditorValue() {
-    return currButton;
+    return currButton.getActionCommand();
   }
   public boolean isCellEditable(EventObject anEvent) {
     return true;

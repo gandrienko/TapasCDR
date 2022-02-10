@@ -35,10 +35,24 @@ public class ActionsTableModel extends AbstractTableModel {
       maxRankToShow = -1; //to force updating
       setMaxRankToShow(max);
     }
+    hideButtons();
+    fireTableDataChanged();
+  }
+  
+  public Action getAction(int idx) {
+    if (actions==null || idx<0 || idx>=actions.size())
+      return null;
+    return actions.get(idx);
   }
   
   public void setActionListener(ActionListener actionListener) {
     this.actionListener = actionListener;
+  }
+  
+  public void hideButtons() {
+    if (buttons!=null)
+      for (int i=actions.size(); i<buttons.size(); i++)
+        buttons.get(i).setVisible(false);
   }
   
   public void setMaxRankToShow(int max) {
@@ -62,6 +76,7 @@ public class ActionsTableModel extends AbstractTableModel {
     for (int i=0; i<allActions.size(); i++)
       if (allActions.get(i).rank<=maxRankToShow)
         actions.add(allActions.get(i));
+    hideButtons();
     fireTableDataChanged();
   }
   
@@ -99,6 +114,8 @@ public class ActionsTableModel extends AbstractTableModel {
   
   public Object getValueAt(int row, int col) {
     Action a=actions.get(row);
+    if (a==null)
+      return null;
     String cName=colNames[col];
     if (cName.equals("Do?")) {
       if (buttons==null)
@@ -110,7 +127,10 @@ public class ActionsTableModel extends AbstractTableModel {
           b.addActionListener(actionListener);
         buttons.add(b);
       }
-      return buttons.get(row);
+      JButton b=buttons.get(row);
+      b.setToolTipText(getActionDescription(a));
+      b.setVisible(true);
+      return b;
     }
     if (cName.equals("Flight"))
       return a.flightId;
@@ -165,13 +185,27 @@ public class ActionsTableModel extends AbstractTableModel {
   
   public String getDetailedText(int row, int col) {
     String cName=colNames[col].toLowerCase();
-    if (colNames[col].toLowerCase().startsWith("why"))
+    if (cName.startsWith("why"))
       return actions.get(row).whyNot;
-    if (colNames[col].toLowerCase().contains("conflicts"))
+    if (cName.contains("conflicts"))
       return actions.get(row).getConflictsDescriptionHTML();
+    if (cName.equals("do?"))
+      return getActionDescription(actions.get(row));
     Object v=getValueAt(row,col);
     if (v==null)
       return null;
     return v.toString();
+  }
+  
+  public String getActionDescription(Action a) {
+    String txt="Apply action "+a.actionType;
+    if (a.actionValue!=0)
+      txt+=":"+a.actionValue;
+    String meaning=Action.getMeaningOfActionType(a.actionType);
+    txt+=" ("+meaning;
+    if (a.actionValue!=0)
+      txt+=((meaning.contains("change"))?" by ":" ")+a.actionValue;
+    txt+=") to flight "+a.flightId;
+    return txt;
   }
 }
