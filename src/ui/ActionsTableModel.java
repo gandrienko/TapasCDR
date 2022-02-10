@@ -14,16 +14,19 @@ public class ActionsTableModel extends AbstractTableModel {
       "H-shift at exit","V-shift at exit","Bearing",
       "Duration","Why not"
   };
+  public static int buttonColIdx=3;
   
   public ArrayList<Action> actions=null, allActions=null;
+  public boolean toMakeActionButtons=true;
   public ArrayList<JButton> buttons=null;
   
   public ActionListener actionListener=null;
   
   public int maxRank=-1, maxRankToShow=-1;
   
-  public void setActions(ArrayList<Action> actions) {
+  public void setActions(ArrayList<Action> actions, boolean toMakeActionButtons) {
     this.actions = actions;
+    //this.toMakeActionButtons = toMakeActionButtons;
     this.allActions=null;
     maxRank=-1;
     if (actions!=null)
@@ -84,10 +87,14 @@ public class ActionsTableModel extends AbstractTableModel {
   }
   
   public String getColumnName(int col) {
+    if (!toMakeActionButtons && col>=buttonColIdx)
+      ++col;
     return colNames[col];
   }
   
   public Class getColumnClass(int c) {
+    if (!toMakeActionButtons && c>=buttonColIdx)
+      ++c;
     if (colNames[c].equals("Do?"))
       return JButton.class;
     if (colNames[c].equals("Value") || colNames[c].equals("Rank") ||
@@ -108,7 +115,7 @@ public class ActionsTableModel extends AbstractTableModel {
   }
   
   public int getColumnCount() {
-    return colNames.length;
+    return (toMakeActionButtons)?colNames.length:colNames.length-1;
   }
   
   public boolean isCellEditable(int row, int col) {
@@ -116,6 +123,8 @@ public class ActionsTableModel extends AbstractTableModel {
   }
   
   public Object getValueAt(int row, int col) {
+    if (!toMakeActionButtons && col>=buttonColIdx)
+      ++col;
     Action a=actions.get(row);
     if (a==null)
       return null;
@@ -168,6 +177,8 @@ public class ActionsTableModel extends AbstractTableModel {
   }
   
   public int getPreferredColumnWidth(int col) {
+    if (!toMakeActionButtons && col>=buttonColIdx)
+      ++col;
     JLabel label=new JLabel(colNames[col]);
     if (colNames[col].startsWith("Flight"))
       label.setText("000000000");
@@ -186,6 +197,8 @@ public class ActionsTableModel extends AbstractTableModel {
   }
   
   public String getDetailedText(int row, int col) {
+    if (!toMakeActionButtons && col>=buttonColIdx)
+      ++col;
     String cName=colNames[col].toLowerCase();
     if (cName.startsWith("why"))
       return actions.get(row).whyNot;

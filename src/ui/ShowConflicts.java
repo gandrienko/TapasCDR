@@ -53,6 +53,9 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   protected JComboBox portionChoice=null;
   protected JButton bAuto=null, bNext=null, bPrevious=null;
   protected JSpinner stepChoice=null;
+  protected int lastPortionIdx=-1;
+  protected boolean toAllowActionChoice=true;
+  
   protected JSpinner rankChoice=null;
   protected JLabel maxRankLabel=null;
   
@@ -66,7 +69,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     this.portions = portions;
     if (portions==null || portions.isEmpty())
       return;
-    setData(portions.get(0).conflicts,portions.get(0).ncEvents);
+    setData(portions.get(0).conflicts,portions.get(0).ncEvents,0);
     portionChoice=new JComboBox();
     for (int i=0; i<portions.size(); i++) {
       DataPortion p=portions.get(i);
@@ -133,7 +136,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   }
   
   public void takeDataPortion(int pIdx) {
-    setData(portions.get(pIdx).conflicts,portions.get(pIdx).ncEvents);
+    setData(portions.get(pIdx).conflicts,portions.get(pIdx).ncEvents,pIdx);
     if (updateLabel!=null) {
       updateLabel.setText("Data portion N " + (pIdx + 1));
     }
@@ -201,7 +204,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       if (e.getSource().equals(dataUpdater)) {
         if (dataUpdater.isRunning() && dataUpdater.hasNextPortion()) {
           DataPortion dp=dataUpdater.getCurrentDataPortion();
-          setData(dp.conflicts,dp.ncEvents);
+          setData(dp.conflicts,dp.ncEvents,dataUpdater.lastIdx);
           if (portionChoice!=null)
             portionChoice.setSelectedIndex(dataUpdater.lastIdx);
           updateLabel.setText("Data portion N "+(dataUpdater.lastIdx+1));
@@ -248,9 +251,13 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     return conflicts;
   }
   
-  public void setData(ArrayList<Conflict> conflicts, ArrayList<NCEvent> ncEvents) {
+  public void setData(ArrayList<Conflict> conflicts,
+                      ArrayList<NCEvent> ncEvents,
+                      int portionIdx) {
     this.conflicts = conflicts;
     this.ncEvents=ncEvents;
+    toAllowActionChoice=portionIdx>lastPortionIdx;
+    this.lastPortionIdx=portionIdx;
     
     if (cTableModel==null)
       cTableModel=new ConflictTableModel();
@@ -264,7 +271,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       if (altiView!=null)
         altiView.setConflict(null);
       if (aTableModel!=null) {
-        aTableModel.setActions(null);
+        aTableModel.setActions(null,false);
         if (rankChoice!=null)
           rankChoice.setEnabled(false);
       }
@@ -442,7 +449,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
           mapView.setConflict(null);
           altiView.setConflict(null);
           if (aTableModel != null) {
-            aTableModel.setActions(null);
+            aTableModel.setActions(null,false);
             if (rankChoice != null)
               rankChoice.setEnabled(false);
           }
@@ -539,7 +546,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     if (!isSecondary && aTable==null) {
       aTableModel =new ActionsTableModel();
       aTableModel.setActionListener(this);
-      aTableModel.setActions(conflict.actions);
+      aTableModel.setActions(conflict.actions,toAllowActionChoice);
       aTable = new JTable(aTableModel){
         public String getToolTipText(MouseEvent e) {
           java.awt.Point p = e.getPoint();
@@ -595,7 +602,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
               data.Action a=aTableModel.actions.get(realRowIndex);
               if (a.conflicts==null || a.conflicts.isEmpty()) {
                 if (secondary !=null)
-                  secondary.setData(null,null);
+                  secondary.setData(null,null,-1);
               }
               else {
                 if (secondary ==null) {
@@ -603,7 +610,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
                   secondary.setIsSecondary(true);
                   secondary.setPrimary(primary);
                 }
-                secondary.setData(a.conflicts,null);
+                secondary.setData(a.conflicts,null,-1);
               }
             }
           }
@@ -659,7 +666,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     mapView.setConflict(conflict);
     altiView.setConflict(conflict);
     if (aTableModel!=null) {
-      aTableModel.setActions(conflict.actions);
+      aTableModel.setActions(conflict.actions,toAllowActionChoice);
       if (maxRankLabel!=null)
         maxRankLabel.setText("max = "+aTableModel.maxRank);
       if (rankChoice!=null)
