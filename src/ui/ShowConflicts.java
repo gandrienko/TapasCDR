@@ -4,7 +4,6 @@ import data.*;
 import data.Action;
 import map.AltiView;
 import map.MapView;
-import table_cells.ButtonInCellRenderer;
 import table_cells.NumberByBarCellRenderer;
 import table_cells.TimeCellRenderer;
 
@@ -19,7 +18,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 10/02/2022 17:25";
+  public static final String versionText="TAPAS CDR UI version 10/02/2022 18:25";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -565,21 +564,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
           return null;
         }
       };
-      DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-      centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-      for (int i=0; i<aTableModel.getColumnCount(); i++) {
-        if (aTableModel.getColumnClass(i).equals(String.class))
-          aTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        else
-        if (aTableModel.getColumnClass(i).equals(JButton.class)) {
-          ButtonInCellRenderer bRend=new ButtonInCellRenderer();
-          aTable.getColumnModel().getColumn(i).setCellRenderer(bRend);
-          aTable.getColumnModel().getColumn(i).setCellEditor(bRend);
-        }
-        int w=aTableModel.getPreferredColumnWidth(i);
-        if (w>0)
-          aTable.getColumnModel().getColumn(i).setPreferredWidth(w);
-      }
+      aTableModel.setColumnModel(aTable.getColumnModel());
       aTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.6f),
           Math.min(Math.round(size.height * 0.6f),aTable.getPreferredSize().height+10)));
       aTable.setFillsViewportHeight(true);

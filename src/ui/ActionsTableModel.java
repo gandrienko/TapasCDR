@@ -1,9 +1,12 @@
 package ui;
 
 import data.Action;
+import table_cells.ButtonInCellRenderer;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumnModel;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
@@ -20,13 +23,19 @@ public class ActionsTableModel extends AbstractTableModel {
   public boolean toMakeActionButtons=true;
   public ArrayList<JButton> buttons=null;
   
+  public TableColumnModel columnModel =null;
+  
   public ActionListener actionListener=null;
   
   public int maxRank=-1, maxRankToShow=-1;
   
+  public void setColumnModel(TableColumnModel columnModel) {
+    this.columnModel = columnModel;
+    setTableColumnRenderers();
+  }
+  
   public void setActions(ArrayList<Action> actions, boolean toMakeActionButtons) {
     this.actions = actions;
-    //this.toMakeActionButtons = toMakeActionButtons;
     this.allActions=null;
     maxRank=-1;
     if (actions!=null)
@@ -38,8 +47,33 @@ public class ActionsTableModel extends AbstractTableModel {
       maxRankToShow = -1; //to force updating
       setMaxRankToShow(max);
     }
+    if (this.toMakeActionButtons != toMakeActionButtons) {
+      this.toMakeActionButtons = toMakeActionButtons;
+      fireTableStructureChanged();
+      setTableColumnRenderers();
+    }
     setVisibilityOfButtons();
     fireTableDataChanged();
+  }
+  
+  protected void setTableColumnRenderers() {
+    if (columnModel==null)
+      return;
+    DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+    centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+    for (int i=0; i<getColumnCount(); i++) {
+      if (getColumnClass(i).equals(String.class))
+        columnModel.getColumn(i).setCellRenderer(centerRenderer);
+      else
+        if (getColumnClass(i).equals(JButton.class)) {
+          ButtonInCellRenderer bRend=new ButtonInCellRenderer();
+          columnModel.getColumn(i).setCellRenderer(bRend);
+          columnModel.getColumn(i).setCellEditor(bRend);
+        }
+      int w=getPreferredColumnWidth(i);
+      if (w>0)
+        columnModel.getColumn(i).setPreferredWidth(w);
+    }
   }
   
   public Action getAction(int idx) {
@@ -53,12 +87,16 @@ public class ActionsTableModel extends AbstractTableModel {
   }
   
   public void setVisibilityOfButtons() {
-    if (buttons!=null) {
-      for (int i = getRowCount(); i < buttons.size(); i++)
-        buttons.get(i).setVisible(false);
-      for (int i=0; i<getRowCount() && i<buttons.size(); i++)
-        buttons.get(i).setVisible(true);
-    }
+    if (buttons!=null)
+      if (toMakeActionButtons) {
+        for (int i = getRowCount(); i < buttons.size(); i++)
+          buttons.get(i).setVisible(false);
+        for (int i=0; i<getRowCount() && i<buttons.size(); i++)
+          buttons.get(i).setVisible(true);
+      }
+      else
+        for (JButton b:buttons)
+          b.setVisible(false);
   }
   
   public void setMaxRankToShow(int max) {
