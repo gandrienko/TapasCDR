@@ -19,7 +19,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 10/02/2022 16:55";
+  public static final String versionText="TAPAS CDR UI version 10/02/2022 17:25";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -51,7 +51,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   public JLabel oneConflictTitle=null, updateLabel=null;
   
   protected JComboBox portionChoice=null;
-  protected JButton bAuto=null;
+  protected JButton bAuto=null, bNext=null, bPrevious=null;
   protected JSpinner stepChoice=null;
   protected JSpinner rankChoice=null;
   protected JLabel maxRankLabel=null;
@@ -95,6 +95,23 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       if (portionChoice!=null)
         dataUpdater.lastIdx=portionChoice.getSelectedIndex();
       if (controlPanel!=null) {
+        updateLabel=new JLabel("Data portion N "+(dataUpdater.lastIdx+1));
+        updateLabel.setForeground(Color.blue.darker());
+        controlPanel.add(updateLabel);
+        controlPanel.add(new JLabel("   "));
+        if (portionChoice!=null) {
+          bNext = new JButton("next");
+          bNext.setActionCommand("next_portion");
+          bNext.addActionListener(this);
+          bNext.setEnabled(portionChoice.getSelectedIndex() < portionChoice.getItemCount() - 1);
+          controlPanel.add(bNext);
+          bPrevious = new JButton("previous");
+          bPrevious.setActionCommand("previous_portion");
+          bPrevious.addActionListener(this);
+          bPrevious.setEnabled(portionChoice.getSelectedIndex() > 0);
+          controlPanel.add(bPrevious);
+          controlPanel.add(new JLabel("       "));
+        }
         bAuto=new JButton("Update automatically");
         bAuto.setActionCommand("auto");
         bAuto.addActionListener(this);
@@ -105,31 +122,51 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
         stepChoice.addChangeListener(this);
         controlPanel.add(stepChoice);
         controlPanel.add(new JLabel("seconds"));
-        updateLabel=new JLabel("Data portion N "+(dataUpdater.lastIdx+1));
-        updateLabel.setForeground(Color.blue.darker());
-        controlPanel.add(updateLabel);
         controlPanel.invalidate();
         controlPanel.validate();
       }
     }
   }
   
+  public boolean isAutoUpdating(){
+    return dataUpdater!=null && dataUpdater.isRunning();
+  }
+  
+  public void takeDataPortion(int pIdx) {
+    setData(portions.get(pIdx).conflicts,portions.get(pIdx).ncEvents);
+    if (updateLabel!=null) {
+      updateLabel.setText("Data portion N " + (pIdx + 1));
+    }
+    if (!isAutoUpdating()) {
+      if (bNext != null)
+        bNext.setEnabled(pIdx < portionChoice.getItemCount() - 1);
+      if (bPrevious != null)
+        bPrevious.setEnabled(pIdx > 0);
+    }
+  }
+  
   public void itemStateChanged(ItemEvent e){
     if (e.getSource().equals(portionChoice)) {
-      int pIdx=portionChoice.getSelectedIndex();
-      setData(portions.get(pIdx).conflicts,portions.get(pIdx).ncEvents);
-      if (updateLabel!=null)
-        updateLabel.setText("Data portion N "+(pIdx+1));
+      takeDataPortion(portionChoice.getSelectedIndex());
     }
   }
   
   public void actionPerformed (ActionEvent e) {
     String cmd=e.getActionCommand();
+    if (cmd.equals("next_portion") || cmd.equals("previous_portion")) {
+      int pIdx=portionChoice.getSelectedIndex();
+      if (cmd.equals("next_portion")) ++pIdx; else --pIdx;
+      portionChoice.setSelectedIndex(pIdx);
+    }
+    else
     if (cmd.equals("auto")) {
       int fromIndex=(portionChoice!=null)?portionChoice.getSelectedIndex()+1:dataUpdater.lastIdx+1;
       if (dataUpdater.startAutoUpdating(fromIndex)) {
-        if (portionChoice != null)
+        if (portionChoice != null) {
           portionChoice.setEnabled(false);
+          bNext.setEnabled(false);
+          bPrevious.setEnabled(false);
+        }
         bAuto.setText("Stop auto updates");
         bAuto.setActionCommand("stop");
         if (stepChoice!=null)
@@ -137,24 +174,24 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       }
     }
     else
-      if (cmd.equals("stop")) {
-        dataUpdater.setToStop(true);
-        autoUpdateStopped();
+    if (cmd.equals("stop")) {
+      dataUpdater.setToStop(true);
+      autoUpdateStopped();
+    }
+    else
+    if (e.getActionCommand().startsWith("do")) {
+      int idx=cmd.indexOf('_');
+      int aIdx=Integer.parseInt(cmd.substring(idx+1));
+      Action a=aTableModel.getAction(aIdx);
+      if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
+          aTableModel.getActionDescription(a)+"?", "Do the action?",
+          JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+              == JOptionPane.YES_OPTION) {
+        System.out.println("Confirmed: "+aTableModel.getActionDescription(a));
       }
       else
-      if (e.getActionCommand().startsWith("do")) {
-        int idx=cmd.indexOf('_');
-        int aIdx=Integer.parseInt(cmd.substring(idx+1));
-        Action a=aTableModel.getAction(aIdx);
-        if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
-            aTableModel.getActionDescription(a)+"?", "Do the action?",
-            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
-                == JOptionPane.YES_OPTION) {
-          System.out.println("Confirmed: "+aTableModel.getActionDescription(a));
-        }
-        else
-          System.out.println("Cancelled: "+aTableModel.getActionDescription(a));
-      }
+        System.out.println("Cancelled: "+aTableModel.getActionDescription(a));
+    }
   }
   
   public void stateChanged(ChangeEvent e) {
@@ -181,6 +218,11 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   protected void autoUpdateStopped() {
     if (portionChoice != null) {
       portionChoice.setEnabled(true);
+      int pIdx=portionChoice.getSelectedIndex();
+      if (bNext != null)
+        bNext.setEnabled(pIdx < portionChoice.getItemCount() - 1);
+      if (bPrevious != null)
+        bPrevious.setEnabled(pIdx > 0);
     }
     if (bAuto!=null) {
       bAuto.setText("Update automatically");
