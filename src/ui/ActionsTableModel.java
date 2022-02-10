@@ -4,10 +4,11 @@ import data.Action;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 public class ActionsTableModel extends AbstractTableModel {
-  public static final String colNames[]={"Flight","Action","Value","Rank",
+  public static final String colNames[]={"Flight","Action","Value","Do?","Rank",
       "Added miles","Added time","Added conflicts",
       "H-speed change","V-speed change","Course change",
       "H-shift at exit","V-shift at exit","Bearing",
@@ -15,6 +16,9 @@ public class ActionsTableModel extends AbstractTableModel {
   };
   
   public ArrayList<Action> actions=null, allActions=null;
+  public ArrayList<JButton> buttons=null;
+  
+  public ActionListener actionListener=null;
   
   public int maxRank=-1, maxRankToShow=-1;
   
@@ -31,6 +35,10 @@ public class ActionsTableModel extends AbstractTableModel {
       maxRankToShow = -1; //to force updating
       setMaxRankToShow(max);
     }
+  }
+  
+  public void setActionListener(ActionListener actionListener) {
+    this.actionListener = actionListener;
   }
   
   public void setMaxRankToShow(int max) {
@@ -62,6 +70,8 @@ public class ActionsTableModel extends AbstractTableModel {
   }
   
   public Class getColumnClass(int c) {
+    if (colNames[c].equals("Do?"))
+      return JButton.class;
     if (colNames[c].equals("Value") || colNames[c].equals("Rank") ||
             colNames[c].equals("Added time") ||
             colNames[c].equals("Duration") || colNames[c].equals("Added conflicts"))
@@ -83,9 +93,25 @@ public class ActionsTableModel extends AbstractTableModel {
     return colNames.length;
   }
   
+  public boolean isCellEditable(int row, int col) {
+    return getColumnClass(col).equals(JButton.class);
+  }
+  
   public Object getValueAt(int row, int col) {
     Action a=actions.get(row);
     String cName=colNames[col];
+    if (cName.equals("Do?")) {
+      if (buttons==null)
+        buttons=new ArrayList<JButton>(100);
+      for (int i=buttons.size(); i<=row; i++) {
+        JButton b=new JButton("Do");
+        b.setActionCommand("do_"+i);
+        if (actionListener!=null)
+          b.addActionListener(actionListener);
+        buttons.add(b);
+      }
+      return buttons.get(row);
+    }
     if (cName.equals("Flight"))
       return a.flightId;
     if (cName.equals("Action"))
@@ -120,11 +146,12 @@ public class ActionsTableModel extends AbstractTableModel {
   }
   
   public int getPreferredColumnWidth(int col) {
-    if (!getColumnClass(col).equals(String.class))
-      return 0;
     JLabel label=new JLabel(colNames[col]);
     if (colNames[col].startsWith("Flight"))
       label.setText("000000000");
+    else
+    if (colNames[col].equals("Do?"))
+      label.setText("___Do___");
     else
     if (colNames[col].equals("Action")) {
       String s=Action.type_meanings[0];
@@ -133,12 +160,6 @@ public class ActionsTableModel extends AbstractTableModel {
           s=Action.type_meanings[i];
       label.setText("RFP: "+s);
     }
-    /*
-    else
-    if (colNames[col].equals("Why not")) {
-      label.setText("Horizontal speed cannot be decreased");
-    }
-    */
     return label.getPreferredSize().width+10;
   }
   

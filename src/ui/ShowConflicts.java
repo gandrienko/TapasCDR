@@ -3,6 +3,7 @@ package ui;
 import data.*;
 import map.AltiView;
 import map.MapView;
+import table_cells.ButtonInCellRenderer;
 import table_cells.NumberByBarCellRenderer;
 import table_cells.TimeCellRenderer;
 
@@ -122,7 +123,8 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   }
   
   public void actionPerformed (ActionEvent e) {
-    if (e.getActionCommand().equals("auto")) {
+    String cmd=e.getActionCommand();
+    if (cmd.equals("auto")) {
       int fromIndex=(portionChoice!=null)?portionChoice.getSelectedIndex()+1:dataUpdater.lastIdx+1;
       if (dataUpdater.startAutoUpdating(fromIndex)) {
         if (portionChoice != null)
@@ -134,9 +136,15 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       }
     }
     else
-      if (e.getActionCommand().equals("stop")) {
+      if (cmd.equals("stop")) {
         dataUpdater.setToStop(true);
         autoUpdateStopped();
+      }
+      else
+      if (e.getActionCommand().startsWith("do")) {
+        int idx=cmd.indexOf('_');
+        int aIdx=Integer.parseInt(cmd.substring(idx+1));
+        System.out.println("Do action " + aIdx);
       }
   }
   
@@ -481,6 +489,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     }
     if (!isSecondary && aTable==null) {
       aTableModel =new ActionsTableModel();
+      aTableModel.setActionListener(this);
       aTableModel.setActions(conflict.actions);
       aTable = new JTable(aTableModel){
         public String getToolTipText(MouseEvent e) {
@@ -502,10 +511,15 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       };
       DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
       centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-      TimeCellRenderer timeRenderer=new TimeCellRenderer();
       for (int i=0; i<aTableModel.getColumnCount(); i++) {
         if (aTableModel.getColumnClass(i).equals(String.class))
           aTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        else
+        if (aTableModel.getColumnClass(i).equals(JButton.class)) {
+          ButtonInCellRenderer bRend=new ButtonInCellRenderer();
+          aTable.getColumnModel().getColumn(i).setCellRenderer(bRend);
+          aTable.getColumnModel().getColumn(i).setCellEditor(bRend);
+        }
         int w=aTableModel.getPreferredColumnWidth(i);
         if (w>0)
           aTable.getColumnModel().getColumn(i).setPreferredWidth(w);
