@@ -18,7 +18,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 11/02/2022 13:15";
+  public static final String versionText="TAPAS CDR UI version 11/02/2022 17:50";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -225,10 +225,22 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
           JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
               == JOptionPane.YES_OPTION) {
         System.out.println("Confirmed: "+aTableModel.getActionDescription(a));
+        int pIdx=dataUpdater.getLastPortionIdx();
+        long pTime=dataUpdater.getDataPortion(pIdx).timeUnix;
+        LocalDateTime dt=LocalDateTime.ofEpochSecond(pTime,0,ZoneOffset.UTC);
+        String msg=String.valueOf(pTime)+";"+a.actionId+" "+a.flightId+" "+
+                       a.actionType+" "+a.actionValue+";"+
+                       String.format("%04d-%02d-%02d %02d:%02d:%02d",
+                           dt.getYear(),dt.getMonthValue(),dt.getDayOfMonth(),
+                           dt.getHour(),dt.getMinute(),dt.getSecond());
+        String channelStr="VAtoXAI";
+        ActionEvent msgEvent=new ActionEvent(channelStr,ActionEvent.ACTION_PERFORMED,msg);
         if (actionListener!=null) {
           //send the event to the listener
-          //todo...
+          actionListener.actionPerformed(msgEvent);
         }
+        else
+          System.out.println(msgEvent);
       }
       else
         System.out.println("Cancelled: "+aTableModel.getActionDescription(a));
