@@ -8,7 +8,7 @@ public class CsvReader {
   public ArrayList<String[]> rows=null;
   public CsvReader (String path, String fname) {
     try {
-      read(path+"\\"+fname);
+      read(path+"/"+fname);
     } catch (IOException ex) {
       System.out.println(ex);
     }
