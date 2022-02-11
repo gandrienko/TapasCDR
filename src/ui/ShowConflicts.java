@@ -18,7 +18,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 11/02/2022 17:50";
+  public static final String versionText="TAPAS CDR UI version 11/02/2022 19:00";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -52,7 +52,6 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   protected JComboBox portionChoice=null;
   protected JButton bAuto=null, bNext=null, bPrevious=null;
   protected JSpinner stepChoice=null;
-  protected int lastPortionIdx=-1;
   protected boolean toAllowActionChoice=true;
   
   protected JSpinner rankChoice=null;
@@ -167,7 +166,19 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     DataPortion dp=dataUpdater.getDataPortion(pIdx);
     if (dp==null)
       return;
-    pIdx=dataUpdater.getLastPortionIdx();
+    if (portionChoice!=null &&
+            portionChoice.getItemCount()<dataUpdater.getDataPortionsCount()) {
+      for (int i=portionChoice.getItemCount(); i<dataUpdater.getDataPortionsCount(); i++) {
+        DataPortion p=dataUpdater.getDataPortion(i);
+        if (p==null)
+          continue;
+        LocalDateTime dt=LocalDateTime.ofEpochSecond(p.timeUnix,0, ZoneOffset.UTC);
+        portionChoice.addItem(String.format("%d : %02d:%02d:%02d on %02d/%02d/%04d",p.timeUnix,
+            dt.getHour(),dt.getMinute(),dt.getSecond(),dt.getDayOfMonth(),dt.getMonthValue(),dt.getYear()));
+      }
+    }
+    if (pIdx<0)
+      pIdx=dataUpdater.getLastPortionIdx();
     setData(dp.conflicts,dp.ncEvents,pIdx);
     if (updateLabel!=null) {
       updateLabel.setText("Data portion N " + (pIdx + 1));
@@ -306,8 +317,13 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
                       int portionIdx) {
     this.conflicts = conflicts;
     this.ncEvents=ncEvents;
-    toAllowActionChoice=portionIdx>lastPortionIdx;
-    this.lastPortionIdx=portionIdx;
+    toAllowActionChoice=portionIdx==dataUpdater.getLastPortionIdx();
+    
+    if (portionChoice!=null) {
+      portionChoice.removeItemListener(this);
+      portionChoice.setSelectedIndex(portionIdx);
+      portionChoice.addItemListener(this);
+    }
     
     if (cTableModel==null)
       cTableModel=new ConflictTableModel();

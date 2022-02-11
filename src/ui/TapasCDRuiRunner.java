@@ -39,6 +39,8 @@ public class TapasCDRuiRunner {
    */
   public void setActionListener(ActionListener actionListener) {
     this.actionListener = actionListener;
+    if (ui!=null)
+      ui.setActionListener(actionListener);
   }
   
   public void setOfflineMode(boolean offlineMode) {
@@ -54,23 +56,27 @@ public class TapasCDRuiRunner {
       return false;
     if (dataUpdater==null)
       dataUpdater=new DataUpdater();
+    int nPrevPortions=dataUpdater.getDataPortionsCount();
     if (!dataUpdater.takeNewData(path))
       return false;
     if (ui==null) {
       ui=new ShowConflicts();
       ui.setDataUpdater(dataUpdater);
+      ui.setActionListener(actionListener);
     }
-    ui.takeDataPortion(-1); //the UI will take the next portion
-    if (offlineMode && dataUpdater.getDataPortionsCount()>1) {
+    int nCurrPortions=dataUpdater.getDataPortionsCount();
+    dataUpdater.toLastPortion();
+    ui.takeDataPortion(-1);
+    if (nPrevPortions<=1 && nCurrPortions>1) {
       ui.enableDataPortionsSelection();
-      ui.makeAutoUpdateControls();
+      if (offlineMode)
+        ui.makeAutoUpdateControls();
     }
     return true;
   }
   
   public void emulateDataUpdating() {
-    if (ui==null || dataUpdater==null || dataUpdater.getDataPortionsCount()<2 ||
-        dataUpdater.getLastPortionIdx()+1>=dataUpdater.getDataPortionsCount())
+    if (ui==null || dataUpdater==null || dataUpdater.getDataPortionsCount()<2)
       return;
     JPanel p=new JPanel(new BorderLayout());
     JPanel pp=new JPanel(new FlowLayout(FlowLayout.CENTER,20,20));
@@ -101,11 +107,10 @@ public class TapasCDRuiRunner {
     b.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        if (dataUpdater.getLastPortionIdx()+1>=dataUpdater.getDataPortionsCount())
+          dataUpdater.toFirstPortion();
         ui.takeDataPortion(-1); //the UI will take the next portion
-        if (dataUpdater.getLastPortionIdx()+1>=dataUpdater.getDataPortionsCount()) {
-          frame.dispose();
-          goOffline();;
-        }
+        dataUpdater.toNextPortion();
       }
     });
   
@@ -119,7 +124,6 @@ public class TapasCDRuiRunner {
     if (offlineMode)
       return;
     offlineMode=true;
-    ui.enableDataPortionsSelection();
     ui.makeAutoUpdateControls();
   }
 }

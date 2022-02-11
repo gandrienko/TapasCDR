@@ -29,6 +29,10 @@ public class DataUpdater {
    * The list of detected non-conformance events
    */
   public ArrayList<NCEvent> ncEvents=null;
+  /**
+   * The index of the last data portion sent
+   */
+  public int lastIdx=-1;
   
   /**
    * Receives the full set of data and divides it into portions.
@@ -173,15 +177,28 @@ public class DataUpdater {
     return lastIdx;
   }
   
+  public void toFirstPortion(){
+    lastIdx=0;
+  }
+  
+  public void toLastPortion(){
+    if (portions!=null)
+      lastIdx=portions.size()-1;
+  }
+  
+  public void toNextPortion() {
+    if (lastIdx+1<getDataPortionsCount())
+      ++lastIdx;
+  }
+  
   public DataPortion getDataPortion(int pIdx) {
     if (portions==null || portions.isEmpty())
       return null;
-    if (pIdx<0)
-      pIdx=lastIdx+1;
-    if (pIdx>=portions.size())
-      return null;
-    lastIdx=pIdx;
-    return portions.get(pIdx);
+    if (pIdx>=0)
+      return (pIdx<portions.size())?portions.get(pIdx):null;
+    if (lastIdx<0)
+      lastIdx=0;
+    return portions.get(lastIdx);
   }
   
   //--------------- getting new data, which are added to the previously loaded data portions ---------
@@ -282,11 +299,7 @@ public class DataUpdater {
    * Time interval, in seconds, between receiving/sending data portions
    */
   public int timeStep=10;
-  /**
-   * The index of the last conflict sent
-   */
-  public int lastIdx=-1;
-  
+ 
   private Timer timer=null;
   
   public void setTimeStep(int timeStep) {
