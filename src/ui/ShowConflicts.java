@@ -18,11 +18,11 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 10/02/2022 18:25";
+  public static final String versionText="TAPAS CDR UI version 11/02/2022 13:15";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
-  public ArrayList<DataPortion> portions=null;
+  //public ArrayList<DataPortion> portions=null;
   /**
    * The data updater from which data portions are received
    */
@@ -63,30 +63,11 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   protected JFrame ncFrame=null;
   
   protected ShowConflicts secondary =null, primary =null;
+  /**
+   * Will receive messages about selection of conflict resolution actions
+   */
+  public ActionListener actionListener=null;
   
-  public void setDataPortions(ArrayList<DataPortion> portions) {
-    this.portions = portions;
-    if (portions==null || portions.isEmpty())
-      return;
-    setData(portions.get(0).conflicts,portions.get(0).ncEvents,0);
-    portionChoice=new JComboBox();
-    for (int i=0; i<portions.size(); i++) {
-      DataPortion p=portions.get(i);
-      LocalDateTime dt=LocalDateTime.ofEpochSecond(p.timeUnix,0, ZoneOffset.UTC);
-      portionChoice.addItem(String.format("%d : %02d:%02d:%02d on %02d/%02d/%04d",p.timeUnix,
-          dt.getHour(),dt.getMinute(),dt.getSecond(),dt.getDayOfMonth(),dt.getMonthValue(),dt.getYear()));
-    }
-    portionChoice.setSelectedIndex(0);
-    portionChoice.addItemListener(this);
-    if (controlPanel==null) {
-      controlPanel = new JPanel();
-      controlPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
-      controlPanel.add(portionChoice);
-      mainFrame.getContentPane().add(controlPanel, BorderLayout.SOUTH);
-      mainFrame.pack();
-      mainFrame.repaint();
-    }
-  }
   /**
    * Sets a data updater from which data portions will be received
    */
@@ -94,40 +75,86 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     this.dataUpdater = dataUpdater;
     if (dataUpdater!=null) {
       dataUpdater.addChangeListener(this);
-      if (portionChoice!=null)
-        dataUpdater.lastIdx=portionChoice.getSelectedIndex();
-      if (controlPanel!=null) {
-        updateLabel=new JLabel("Data portion N "+(dataUpdater.lastIdx+1));
-        updateLabel.setForeground(Color.blue.darker());
-        controlPanel.add(updateLabel);
-        controlPanel.add(new JLabel("   "));
-        if (portionChoice!=null) {
-          bNext = new JButton("next");
-          bNext.setActionCommand("next_portion");
-          bNext.addActionListener(this);
-          bNext.setEnabled(portionChoice.getSelectedIndex() < portionChoice.getItemCount() - 1);
-          controlPanel.add(bNext);
-          bPrevious = new JButton("previous");
-          bPrevious.setActionCommand("previous_portion");
-          bPrevious.addActionListener(this);
-          bPrevious.setEnabled(portionChoice.getSelectedIndex() > 0);
-          controlPanel.add(bPrevious);
-          controlPanel.add(new JLabel("       "));
-        }
-        bAuto=new JButton("Update automatically");
-        bAuto.setActionCommand("auto");
-        bAuto.addActionListener(this);
-        controlPanel.add(bAuto);
-        controlPanel.add(new JLabel("every"));
-        SpinnerModel sm=new SpinnerNumberModel(dataUpdater.timeStep,5,300,5);
-        stepChoice=new JSpinner(sm);
-        stepChoice.addChangeListener(this);
-        controlPanel.add(stepChoice);
-        controlPanel.add(new JLabel("seconds"));
-        controlPanel.invalidate();
-        controlPanel.validate();
+      updateLabel = new JLabel("Data portion N " + (dataUpdater.lastIdx + 1));
+      updateLabel.setForeground(Color.blue.darker());
+      addToControlPanel(updateLabel);
+    }
+  }
+  
+  /**
+   * @param actionListener will receive messages about selection of
+   *                       conflict resolution actions
+   */
+  public void setActionListener(ActionListener actionListener) {
+    this.actionListener = actionListener;
+  }
+  
+  protected void addToControlPanel(JComponent component) {
+    if (controlPanel==null) {
+      controlPanel = new JPanel();
+      controlPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
+      controlPanel.add(component);
+      if (mainFrame!=null) {
+        mainFrame.getContentPane().add(controlPanel, BorderLayout.SOUTH);
+        mainFrame.pack();
+        mainFrame.repaint();
       }
     }
+    else {
+      controlPanel.add(component);
+      controlPanel.invalidate();
+      if (mainFrame!=null) {
+        mainFrame.invalidate();
+        mainFrame.validate();
+      }
+      else
+        controlPanel.validate();
+    }
+  }
+  
+  public void enableDataPortionsSelection() {
+    if (dataUpdater==null || dataUpdater.getDataPortionsCount()<1)
+      return;
+    ArrayList<DataPortion> portions=dataUpdater.portions;
+    portionChoice=new JComboBox();
+    for (int i=0; i<portions.size(); i++) {
+      DataPortion p=portions.get(i);
+      LocalDateTime dt=LocalDateTime.ofEpochSecond(p.timeUnix,0, ZoneOffset.UTC);
+      portionChoice.addItem(String.format("%d : %02d:%02d:%02d on %02d/%02d/%04d",p.timeUnix,
+          dt.getHour(),dt.getMinute(),dt.getSecond(),dt.getDayOfMonth(),dt.getMonthValue(),dt.getYear()));
+    }
+    portionChoice.setSelectedIndex(dataUpdater.lastIdx);
+    portionChoice.addItemListener(this);
+    JPanel p=new JPanel(new FlowLayout(FlowLayout.LEFT,10,10));
+    p.add(new JLabel("   "));
+    p.add(portionChoice);
+    bNext = new JButton("next");
+    bNext.setActionCommand("next_portion");
+    bNext.addActionListener(this);
+    bNext.setEnabled(portionChoice.getSelectedIndex() < portionChoice.getItemCount() - 1);
+    p.add(bNext);
+    bPrevious = new JButton("previous");
+    bPrevious.setActionCommand("previous_portion");
+    bPrevious.addActionListener(this);
+    bPrevious.setEnabled(portionChoice.getSelectedIndex() > 0);
+    p.add(bPrevious);
+    addToControlPanel(p);
+  }
+  
+  public void makeAutoUpdateControls(){
+    JPanel p=new JPanel(new FlowLayout(FlowLayout.RIGHT,10,10));
+    p.add(new JLabel("       "));
+    bAuto=new JButton("Update automatically");
+    bAuto.setActionCommand("auto");
+    bAuto.addActionListener(this);
+    p.add(bAuto);
+    p.add(new JLabel("every"));
+    SpinnerModel sm=new SpinnerNumberModel(dataUpdater.timeStep,5,300,5);
+    stepChoice=new JSpinner(sm);
+    stepChoice.addChangeListener(this);
+    p.add(stepChoice);
+    p.add(new JLabel("seconds"));
+    addToControlPanel(p);
   }
   
   public boolean isAutoUpdating(){
@@ -135,9 +162,17 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   }
   
   public void takeDataPortion(int pIdx) {
-    setData(portions.get(pIdx).conflicts,portions.get(pIdx).ncEvents,pIdx);
+    if (dataUpdater==null)
+      return;
+    DataPortion dp=dataUpdater.getDataPortion(pIdx);
+    if (dp==null)
+      return;
+    pIdx=dataUpdater.getLastPortionIdx();
+    setData(dp.conflicts,dp.ncEvents,pIdx);
     if (updateLabel!=null) {
       updateLabel.setText("Data portion N " + (pIdx + 1));
+      updateLabel.invalidate();
+      updateLabel.validate();
     }
     if (!isAutoUpdating()) {
       if (bNext != null)
@@ -190,6 +225,10 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
           JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
               == JOptionPane.YES_OPTION) {
         System.out.println("Confirmed: "+aTableModel.getActionDescription(a));
+        if (actionListener!=null) {
+          //send the event to the listener
+          //todo...
+        }
       }
       else
         System.out.println("Cancelled: "+aTableModel.getActionDescription(a));
@@ -422,6 +461,8 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
         });
       }
       mainFrame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+      if (controlPanel!=null)
+        mainFrame.getContentPane().add(controlPanel,BorderLayout.SOUTH);
       //Display the window.
       mainFrame.pack();
       if (isSecondary)
