@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class ActionsTableModel extends AbstractTableModel {
   public static final String colNames[]={"Flight","Action","Value","Do?","Rank",
-      "Added miles","Added time","Added conflicts",
+      "Added miles","Added time","Conflicts foreseen",
       "H-speed change","V-speed change","Course change",
       "H-shift at exit","V-shift at exit","Bearing",
       "Duration","Why not"
@@ -134,15 +134,16 @@ public class ActionsTableModel extends AbstractTableModel {
   public Class getColumnClass(int c) {
     if (!toMakeActionButtons && c>=buttonColIdx)
       ++c;
-    if (colNames[c].equals("Do?"))
+    String cName=colNames[c].toLowerCase();
+    if (cName.equals("do?"))
       return JButton.class;
-    if (colNames[c].equals("Value") || colNames[c].equals("Rank") ||
-            colNames[c].equals("Added time") ||
-            colNames[c].equals("Duration") || colNames[c].equals("Added conflicts"))
+    if (cName.equals("value") || cName.equals("rank") ||
+            cName.equals("added time") ||
+            cName.equals("duration") || cName.contains("conflicts"))
       return Integer.class;
-    if (colNames[c].startsWith("H-") || colNames[c].startsWith("V-") ||
-            colNames[c].startsWith("Course") || colNames[c].equals("Bearing") ||
-            colNames[c].equals("Added miles"))
+    if (cName.startsWith("h-") || cName.startsWith("v-") ||
+            cName.startsWith("course") || cName.equals("bearing") ||
+            cName.equals("added miles"))
       return Double.class;
     return String.class;
   }
@@ -167,8 +168,8 @@ public class ActionsTableModel extends AbstractTableModel {
     Action a=actions.get(row);
     if (a==null)
       return null;
-    String cName=colNames[col];
-    if (cName.equals("Do?")) {
+    String cName=colNames[col].toLowerCase();
+    if (cName.equals("do?")) {
       if (buttons==null)
         buttons=new ArrayList<JButton>(100);
       for (int i=buttons.size(); i<=row; i++) {
@@ -182,35 +183,35 @@ public class ActionsTableModel extends AbstractTableModel {
       b.setToolTipText(getActionDescription(a));
       return b;
     }
-    if (cName.equals("Flight"))
+    if (cName.equals("flight"))
       return a.flightId;
-    if (cName.equals("Action"))
+    if (cName.equals("action"))
       return a.actionType+": "+Action.getMeaningOfActionType(a.actionType);
-    if (cName.equals("Value"))
+    if (cName.equals("value"))
       return a.actionValue;
-    if (cName.equals("Rank"))
+    if (cName.equals("rank"))
       return a.rank;
-    if (cName.equals("Added miles"))
+    if (cName.equals("added miles"))
       return (Double.isNaN(a.addMiles))?null:a.addMiles;
-    if (cName.equals("Added time"))
+    if (cName.equals("added time"))
       return a.addTime;
-    if (cName.equals("Duration"))
+    if (cName.equals("duration"))
       return a.duration;
-    if (cName.equals("Added conflicts"))
+    if (cName.contains("conflicts"))
       return (a.conflicts==null)?0:a.conflicts.size();
-    if (cName.equals("H-speed change"))
+    if (cName.equals("h-speed change"))
       return a.hSpeedChange;
-    if (cName.equals("V-speed change"))
+    if (cName.equals("v-speed change"))
       return a.vSpeedChange;
-    if (cName.equals("Course change"))
+    if (cName.equals("course change"))
       return a.courseChange;
-    if (cName.equals("H-shift at exit"))
+    if (cName.equals("h-shift at exit"))
       return a.hShiftExit;
-    if (cName.equals("V-shift at exit"))
+    if (cName.equals("v-shift at exit"))
       return a.vShiftExit;
-    if (cName.equals("Bearing"))
+    if (cName.equals("bearing"))
       return a.bearing;
-    if (cName.equals("Why not"))
+    if (cName.equals("why not"))
       return a.whyNot;
     return null;
   }

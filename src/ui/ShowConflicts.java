@@ -18,7 +18,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 14/02/2022 12:15";
+  public static final String versionText="TAPAS CDR UI version 14/02/2022 12:30";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -689,7 +689,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       });
   
       
-      aTableModel.setMaxRankToShow(5);
+      aTableModel.setMaxRankToShow(0);
       int value=aTableModel.maxRankToShow;
       if (aTableModel.maxRank>0 && (value<0 || value>aTableModel.maxRank))
         value=aTableModel.maxRank;
