@@ -113,13 +113,14 @@ public class ActionsTableModel extends AbstractTableModel {
     }
     if (allActions==null) {
       allActions = actions;
-      actions=new ArrayList<Action>(allActions.size());
+      actions=new ArrayList<Action>(100);
     }
     else
       actions.clear();
-    for (int i=0; i<allActions.size(); i++)
-      if (allActions.get(i).rank<=maxRankToShow)
-        actions.add(allActions.get(i));
+    if (allActions!=null && actions!=null)
+      for (int i=0; i<allActions.size(); i++)
+        if (allActions.get(i).rank<=maxRankToShow)
+          actions.add(allActions.get(i));
     setVisibilityOfButtons();
     fireTableDataChanged();
   }

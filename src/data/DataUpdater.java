@@ -177,6 +177,10 @@ public class DataUpdater {
     return lastIdx;
   }
   
+  public void setLastPortionIdx(int lastIdx) {
+    this.lastIdx = lastIdx;
+  }
+  
   public void toFirstPortion(){
     lastIdx=0;
   }

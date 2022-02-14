@@ -18,7 +18,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 11/02/2022 19:00";
+  public static final String versionText="TAPAS CDR UI version 14/02/2022 12:15";
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
    */
@@ -66,6 +66,16 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
    * Will receive messages about selection of conflict resolution actions
    */
   public ActionListener actionListener=null;
+  /**
+   * The channel for sending action selection events
+   */
+  public String channelName ="VAtoXAI";
+
+  public boolean offlineMode=true;
+  
+  public void setOfflineMode(boolean offlineMode) {
+    this.offlineMode = offlineMode;
+  }
   
   /**
    * Sets a data updater from which data portions will be received
@@ -86,6 +96,10 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
    */
   public void setActionListener(ActionListener actionListener) {
     this.actionListener = actionListener;
+  }
+  
+  public void setChannelName(String channelName) {
+    this.channelName = channelName;
   }
   
   protected void addToControlPanel(JComponent component) {
@@ -195,7 +209,11 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
   
   public void itemStateChanged(ItemEvent e){
     if (e.getSource().equals(portionChoice)) {
-      takeDataPortion(portionChoice.getSelectedIndex());
+      int pIdx=portionChoice.getSelectedIndex();
+      if (offlineMode && dataUpdater!=null &&
+              (dataUpdater.getLastPortionIdx()<pIdx))
+        dataUpdater.setLastPortionIdx(pIdx);
+      takeDataPortion(pIdx);
     }
   }
   
@@ -244,8 +262,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
                        String.format("%04d-%02d-%02d %02d:%02d:%02d",
                            dt.getYear(),dt.getMonthValue(),dt.getDayOfMonth(),
                            dt.getHour(),dt.getMinute(),dt.getSecond());
-        String channelStr="VAtoXAI";
-        ActionEvent msgEvent=new ActionEvent(channelStr,ActionEvent.ACTION_PERFORMED,msg);
+        ActionEvent msgEvent=new ActionEvent(channelName,ActionEvent.ACTION_PERFORMED,msg);
         if (actionListener!=null) {
           //send the event to the listener
           actionListener.actionPerformed(msgEvent);
@@ -317,7 +334,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
                       int portionIdx) {
     this.conflicts = conflicts;
     this.ncEvents=ncEvents;
-    toAllowActionChoice=portionIdx==dataUpdater.getLastPortionIdx();
+    toAllowActionChoice=dataUpdater!=null && portionIdx==dataUpdater.getLastPortionIdx();
     
     if (portionChoice!=null) {
       portionChoice.removeItemListener(this);
@@ -674,9 +691,10 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       
       aTableModel.setMaxRankToShow(5);
       int value=aTableModel.maxRankToShow;
-      if (value<0 || value>aTableModel.maxRank)
+      if (aTableModel.maxRank>0 && (value<0 || value>aTableModel.maxRank))
         value=aTableModel.maxRank;
-      SpinnerModel rankChoiceModel=new SpinnerNumberModel(value,0,aTableModel.maxRank,1);
+      SpinnerModel rankChoiceModel=new SpinnerNumberModel(value,0,
+          Math.max(aTableModel.maxRank,value),1);
       rankChoice=new JSpinner(rankChoiceModel);
       rankChoice.addChangeListener(this);
       maxRankLabel=new JLabel("max = ???");

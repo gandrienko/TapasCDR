@@ -15,6 +15,10 @@ public class TapasCDRuiRunner {
    */
   public ActionListener actionListener=null;
   /**
+   * The channel for sending action selection events
+   */
+  public String channelName ="VAtoXAI";
+  /**
    * Displays the detected conflicts and proposed resolution actions
    */
   public ShowConflicts ui=null;
@@ -43,8 +47,16 @@ public class TapasCDRuiRunner {
       ui.setActionListener(actionListener);
   }
   
+  public void setChannelName(String channelName) {
+    this.channelName = channelName;
+    if (ui!=null)
+      ui.setChannelName(channelName);
+  }
+  
   public void setOfflineMode(boolean offlineMode) {
     this.offlineMode = offlineMode;
+    if (ui!=null)
+      ui.setOfflineMode(offlineMode);
   }
   
   /**
@@ -63,9 +75,12 @@ public class TapasCDRuiRunner {
       ui=new ShowConflicts();
       ui.setDataUpdater(dataUpdater);
       ui.setActionListener(actionListener);
+      ui.setChannelName(channelName);
     }
     int nCurrPortions=dataUpdater.getDataPortionsCount();
-    dataUpdater.toLastPortion();
+    if (!offlineMode)
+      dataUpdater.toLastPortion();
+    ui.setOfflineMode(offlineMode);
     ui.takeDataPortion(-1);
     if (nPrevPortions<=1 && nCurrPortions>1) {
       ui.enableDataPortionsSelection();
@@ -124,6 +139,7 @@ public class TapasCDRuiRunner {
     if (offlineMode)
       return;
     offlineMode=true;
+    ui.setOfflineMode(true);
     ui.makeAutoUpdateControls();
   }
 }

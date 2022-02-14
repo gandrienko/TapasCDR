@@ -36,6 +36,8 @@ public class CsvReader {
     return -1;
   }
   public String getValue (int row, int columnN) {
+    if (columnN<0 || columnN>=getNColumns() || row<0 || row>=getNRows())
+      return null;
     String values[]=rows.get(row);
     String v=null;
     if (values!=null && columnN<values.length)

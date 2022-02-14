@@ -7,9 +7,9 @@ public class Main {
       String path=args[0];
       System.out.println(path);
       TapasCDRuiRunner uiRunner=new TapasCDRuiRunner(null);
-      uiRunner.setOfflineMode(false);
+      uiRunner.setOfflineMode(true);
       uiRunner.takeData(path);
-      uiRunner.emulateDataUpdating();
+      //uiRunner.emulateDataUpdating();
     }
     
   }

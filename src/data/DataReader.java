@@ -153,7 +153,7 @@ public class DataReader {
       for (int j = 0; j < data.columns.length && cNums[i]<0; j++)
         if (data.columns[j].equalsIgnoreCase(colNames_Conflicts[i]))
           cNums[i]=j;
-      if (cNums[i]<0 && i<6)
+      if (cNums[i]<0 && i<5)
         return 0; //necessary fields are missing
     }
     
