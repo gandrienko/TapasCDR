@@ -55,4 +55,17 @@ public class NCEvent {
    * non_conformance_events.csv: ActualValue
    */
   public double actualValue=Double.NaN;
+  
+  public static double getValueInRightUnits(String valueType, double value) {
+    if (valueType==null)
+      return value;
+    valueType=valueType.toLowerCase();
+    if (valueType.contains("speed"))
+      if (valueType.startsWith("h") || valueType.contains("hor"))
+        return FlightInConflict.transformMpSToMachNumber(value);
+      else
+        if (valueType.startsWith("v") || valueType.contains("vert"))
+          return value*60;
+    return value;
+  }
 }

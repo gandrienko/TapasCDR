@@ -1,6 +1,7 @@
 package ui;
 
 import data.Action;
+import data.FlightInConflict;
 import data.NCEvent;
 
 import javax.swing.*;
@@ -55,16 +56,19 @@ public class NonConfEventTableModel extends AbstractTableModel {
       return e.flightId;
     if (cName.equals("Action"))
       return a.actionType+": "+Action.getMeaningOfActionType(a.actionType);
-    if (cName.equals("Action value"))
+    if (cName.equals("Action value")) {
+      if (a.actionValue!=0 && a.actionType.equals("A2"))
+        return FlightInConflict.transformKnotsToMachNumber(a.actionValue);
       return a.actionValue;
+    }
     if (cName.equals("Action time"))
       return LocalDateTime.ofEpochSecond(e.actionTimeUnix,0, ZoneOffset.UTC);
     if (cName.equals("Violated"))
       return e.type;
     if (cName.equals("Desired value"))
-      return e.desiredValue;
+      return NCEvent.getValueInRightUnits(e.type,e.desiredValue);
     if (cName.equals("Actual value"))
-      return e.actualValue;
+      return NCEvent.getValueInRightUnits(e.type,e.actualValue);
     return null;
   }
   
