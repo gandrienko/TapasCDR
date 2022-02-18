@@ -8,6 +8,7 @@ import java.util.Arrays;
  */
 
 public class FlightInConflict {
+  public static final int speedOfSound=343; //meters per second
   public static final int Climbing=1, Cruising=2, Descending=3;
   public static final String phaseStrings[]={"climbing","cruising","descending"};
   public static final char phaseCodes[]={0,'\u2197','\u2192','\u2198'};
@@ -118,6 +119,30 @@ public class FlightInConflict {
   }
   
   /**
+   * @param speedMpS - speed in meters per second
+   * @return speed in knots, i.e., nautical miles per hour
+   */
+  public static double transformMpStoKnots(double speedMpS) {
+    if (Double.isNaN(speedMpS))
+      return Double.NaN;
+    return speedMpS*3600/1852;
+  }
+  
+  public static double transformMpSToMachNumber(double speedMpS) {
+    if (Double.isNaN(speedMpS))
+      return Double.NaN;
+    return speedMpS/speedOfSound;
+  }
+  
+  public static double transformKnotsToMachNumber(double knots){
+    if (Double.isNaN(knots))
+      return Double.NaN;
+    if (knots==0)
+      return 0;
+    return transformMpSToMachNumber(knots*1852/3600);
+  }
+  
+  /**
    * @return the smallest Measure Of Compliance (MOC) among the conflict points specified
    */
   public double getComplianceMeasure () {
@@ -162,7 +187,9 @@ public class FlightInConflict {
     s+=String.format("<tr align=right><td>Destination</td><td>%s</td></tr>",destination);
     s+=String.format("<tr align=right><td>Phase</td><td>%s</td></tr>",phase);
     s+=String.format("<tr align=right><td>Course</td><td>%.1f</td><td>degrees</td></tr>",course);
-    s+=String.format("<tr align=right><td>Horizontal speed</td><td>%.2f</td><td>nm/min.</td></tr>",speed_h*60/1852);
+    s+=String.format("<tr align=right><td>Horizontal speed</td>" +
+                         "<td>%.3f</td><td>knots</td><td>%.4f</td><td>Mach</td></tr>",
+                             transformMpStoKnots(speed_h),transformMpSToMachNumber(speed_h));
     s+=String.format("<tr align=right><td>Vertical speed</td><td>%.0f</td><td>feet/min.</td></tr>",speed_v*60);
     s+=String.format("<tr align=right><td>Altitude</td><td>%d</td><td>feet</td></tr>",altitude);
     s += "</table>";

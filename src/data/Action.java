@@ -43,12 +43,18 @@ public class Action {
   public int actionValue=0;
   /**
    * resolution_actions_episode_1.csv: VSpeedChange
+   * (transformed to feet per minute during data loading)
    */
   public int vSpeedChange=0;
   /**
    * resolution_actions_episode_1.csv: HSpeedChange
+   * (transformed to knots during data loading)
    */
   public double hSpeedChange=0;
+  /**
+   * the horizontal speed transformed to Mach number
+   */
+  public double hSpeedChangeMach=0;
   /**
    * resolution_actions_episode_1.csv: CourseChange
    */
@@ -195,4 +201,6 @@ public class Action {
         return type_meanings[i];
     return type;
   }
+  
+  
 }

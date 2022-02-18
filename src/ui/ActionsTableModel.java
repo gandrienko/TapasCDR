@@ -1,6 +1,7 @@
 package ui;
 
 import data.Action;
+import data.FlightInConflict;
 import table_cells.ButtonInCellRenderer;
 
 import javax.swing.*;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 
 public class ActionsTableModel extends AbstractTableModel {
   public static final String colNames[]={"Flight","Action","Value","Do?","Rank",
-      "Added miles","Added time","Conflicts foreseen",
+      "Added miles","Added seconds","Conflicts foreseen",
       "H-speed change","V-speed change","Course change",
       "H-shift at exit","V-shift at exit","Bearing",
       "Duration","Why not"
@@ -137,11 +138,11 @@ public class ActionsTableModel extends AbstractTableModel {
     String cName=colNames[c].toLowerCase();
     if (cName.equals("do?"))
       return JButton.class;
-    if (cName.equals("value") || cName.equals("rank") ||
-            cName.equals("added time") ||
+    if (cName.equals("rank") ||
+            cName.equals("added seconds") ||
             cName.equals("duration") || cName.contains("conflicts"))
       return Integer.class;
-    if (cName.startsWith("h-") || cName.startsWith("v-") ||
+    if (cName.equals("value") || cName.startsWith("h-") || cName.startsWith("v-") ||
             cName.startsWith("course") || cName.equals("bearing") ||
             cName.equals("added miles"))
       return Double.class;
@@ -187,20 +188,23 @@ public class ActionsTableModel extends AbstractTableModel {
       return a.flightId;
     if (cName.equals("action"))
       return a.actionType+": "+Action.getMeaningOfActionType(a.actionType);
-    if (cName.equals("value"))
+    if (cName.equals("value")) {
+      if (a.actionValue!=0 && a.actionType.equals("A2"))
+        return FlightInConflict.transformKnotsToMachNumber(a.actionValue);
       return a.actionValue;
+    }
     if (cName.equals("rank"))
       return a.rank;
     if (cName.equals("added miles"))
       return (Double.isNaN(a.addMiles))?null:a.addMiles;
-    if (cName.equals("added time"))
+    if (cName.equals("added seconds"))
       return a.addTime;
     if (cName.equals("duration"))
       return a.duration;
     if (cName.contains("conflicts"))
       return (a.conflicts==null)?0:a.conflicts.size();
     if (cName.equals("h-speed change"))
-      return a.hSpeedChange;
+      return a.hSpeedChangeMach*100;
     if (cName.equals("v-speed change"))
       return a.vSpeedChange;
     if (cName.equals("course change"))
@@ -249,7 +253,48 @@ public class ActionsTableModel extends AbstractTableModel {
     Object v=getValueAt(row,col);
     if (v==null)
       return null;
-    return v.toString();
+    String txt=v.toString();
+    if (v instanceof Double) {
+      int pIdx=txt.indexOf('.');
+      if (pIdx>0 && pIdx<txt.length()-4)
+        txt=String.format("%.4f",v);
+    }
+    if (cName.equals("value")) {
+      Action a=actions.get(row);
+      if (a.actionType.equals("A1"))
+        txt+=(a.actionValue>0)?" (up)":" (down)";
+      else
+      if (a.actionType.equals("A2"))
+        txt+=" Mach";
+      else
+      if (a.actionType.equals("A3"))
+        txt+=" (waypoint number)";
+      else
+      if (a.actionType.equals("S2"))
+        txt+=" degrees";
+    }
+    else
+    if (cName.equals("added miles"))
+      txt+=" nm";
+    else
+    if (cName.equals("added seconds") || cName.equals("duration"))
+      txt+=" seconds";
+    else
+    if (cName.equals("h-speed change"))
+      txt+=" Mach * 100";
+    else
+    if (cName.equals("v-speed change"))
+      txt+=" feet/minute";
+    else
+    if (cName.equals("course change") || cName.equals("bearing"))
+      txt+=" degrees";
+    else
+    if (cName.equals("h-shift at exit"))
+      txt+=" meters";
+    else
+    if (cName.equals("v-shift at exit"))
+      txt+="feet";
+    return txt;
   }
   
   public String getActionDescription(Action a) {

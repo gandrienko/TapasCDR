@@ -266,10 +266,13 @@ public class DataReader {
           a.rank=Integer.parseInt(sValue);
         else
         if (colName.equalsIgnoreCase("VSpeedChange"))
-          a.vSpeedChange=Math.round(Float.parseFloat(sValue));
+          a.vSpeedChange=Math.round(Float.parseFloat(sValue))*60;
         else
-        if (colName.equalsIgnoreCase("HSpeedChange"))
-          a.hSpeedChange=Double.parseDouble(sValue);
+        if (colName.equalsIgnoreCase("HSpeedChange")) {
+          double s=Double.parseDouble(sValue);
+          a.hSpeedChange = FlightInConflict.transformMpStoKnots(s);
+          a.hSpeedChangeMach=FlightInConflict.transformMpSToMachNumber(s);
+        }
         else
         if (colName.equalsIgnoreCase("CourseChange"))
           a.courseChange=Double.parseDouble(sValue);
