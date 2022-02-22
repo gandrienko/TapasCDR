@@ -214,10 +214,14 @@ public class Conflict {
     if (Double.isNaN(relSpeedH) || Double.isNaN((relSpeedV))) {
       ConflictPoint cp = flights[0].closest, cpPrev = flights[0].first;
       if (cp.pointTimeUnix > cpPrev.pointTimeUnix) {
-        relSpeedH=(cpPrev.hDistance-cp.hDistance)/(cp.pointTimeUnix-cpPrev.pointTimeUnix)*60;
         relSpeedV=(cpPrev.vDistance-cp.vDistance)/(cp.pointTimeUnix-cpPrev.pointTimeUnix)*60;
-        rateOfClosureH=(relSpeedH<=0)?0:(relSpeedH<=85)?1:(relSpeedH<=205)?2:(relSpeedH<=700)?4:5;
         rateOfClosureV=(relSpeedV<=0)?0:(relSpeedV<=1000)?1:(relSpeedV<=2000)?2:(relSpeedV<=4000)?4:5;
+        if (flights[0].crossing!=null &&
+                flights[0].crossing.pointTimeUnix<cp.pointTimeUnix &&
+                flights[0].crossing.pointTimeUnix>cpPrev.pointTimeUnix)
+          cp=flights[0].crossing;
+        relSpeedH=(cpPrev.hDistance-cp.hDistance)/(cp.pointTimeUnix-cpPrev.pointTimeUnix)*3600;
+        rateOfClosureH=(relSpeedH<=0)?0:(relSpeedH<=85)?1:(relSpeedH<=205)?2:(relSpeedH<=700)?4:5;
       }
       int rateOfClosure=Math.max(rateOfClosureH,rateOfClosureV);
       int rateMoC=(measureOfCompliance>=100)?
