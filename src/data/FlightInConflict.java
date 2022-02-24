@@ -2,6 +2,7 @@ package data;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Contains information about one flight involved in a conflict
@@ -93,6 +94,10 @@ public class FlightInConflict {
    */
   public ConflictPoint closest=null, first=null, last=null, crossing=null;
   /**
+   * The conflict points and projection points arranged in a chronological sequence.
+   */
+  public ArrayList<FlightPoint> path=null;
+  /**
    * The Measure Of Compliance (MOC), which is the biggest distance apart (expressed as a %)
    *
    * For example two flights that have 0NM separation (lateral) but 950ft vertical are separated
@@ -179,6 +184,32 @@ public class FlightInConflict {
       pp[i-i1]=pts.get(i);
     Arrays.sort(pp);
     return pp.length;
+  }
+  
+  /**
+   * Returns a chronological sequence of conflict points and projection points
+   */
+  public ArrayList<FlightPoint> getPath() {
+    if (path!=null)
+      return path;
+    ConflictPoint cp[]={first,closest,last};
+    int np=0;
+    for (int i=0; i<cp.length; i++)
+      if (cp[i]!=null) ++np;
+    if (np<2)
+      return null;
+    if (pp!=null)
+      np+=pp.length;
+    path=new ArrayList<FlightPoint>(np);
+    for (int i=0; i<cp.length; i++)
+      if (cp[i]!=null)
+        path.add(cp[i]);
+    if (pp!=null)
+      for (int i=0; i<pp.length; i++)
+        if (pp[i]!=null)
+          path.add(pp[i]);
+    Collections.sort(path);
+    return path;
   }
   
   public String getDescriptionHTML() {

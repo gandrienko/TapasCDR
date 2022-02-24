@@ -13,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class MapView extends JPanel
     implements MouseListener, MouseMotionListener, ChangeListener
@@ -20,7 +21,7 @@ public class MapView extends JPanel
   public static final Color colorF1=new Color(128,0,0), colorF2=new Color(0,0,128),
       paleColorF1 =new Color(255,0,0,128), paleColorF2 =new Color(0,0,255,128),
       textColorF1=new Color(96,0,0,128), textColorF2=new Color(0,0,96,128);
-  public static final Stroke stroke2=new BasicStroke(2);
+  public static final Stroke stroke2=new BasicStroke(3);
   public static final float dash[] = {2.0f,2.0f};
   public static Stroke dashedStroke = new BasicStroke(1.0f,BasicStroke.CAP_BUTT,
       BasicStroke.JOIN_MITER,3.0f, dash, 0.0f);
@@ -121,6 +122,7 @@ public class MapView extends JPanel
     g.setRenderingHints(rh);
 
     Stroke stroke=g.getStroke();
+    FontMetrics fm=g.getFontMetrics();
   
     FlightInConflict f1=conflict.flights[0], f2=conflict.flights[1];
     int x01=metrics.scrX(f1.lon), y01=metrics.scrY(f1.lat),
@@ -130,7 +132,6 @@ public class MapView extends JPanel
     g.setColor(colorF2);
     g.fillRect(x02-2,y02-2,5,5);
     
-    FontMetrics fm=g.getFontMetrics();
     int sw1=fm.stringWidth(f1.flightId), sw2=fm.stringWidth(f2.flightId);
     int tx1=x01-sw1/2, ty1=y01-3;
     if (tx1<1) tx1=1; else if (tx1+sw1>=w) tx1=w-sw1-1;
@@ -142,65 +143,49 @@ public class MapView extends JPanel
     g.drawString(f1.flightId,tx1,ty1);
     g.setColor(textColorF2);
     g.drawString(f2.flightId,tx2,ty2);
-    
-    for (int j=0; j<3; j++) {
-      ConflictPoint cp1=(j==0)?f1.first:(j==1)?f1.closest:f1.last,
-          cp2=(j==0)?f2.first:(j==1)?f2.closest:f2.last;
-      if (cp1==null || cp2==null)
+  
+  
+    for (int i=0; i<2; i++) {
+      FlightInConflict f=conflict.flights[i];
+      ArrayList<FlightPoint> path=f.getPath();
+      if (path==null)
         continue;
-      int x1=metrics.scrX(cp1.lon), y1=metrics.scrY(cp1.lat),
-          x2=metrics.scrX(cp2.lon), y2=metrics.scrY(cp2.lat);
-      g.setStroke(stroke2);
-      g.setColor(colorF1);
-      g.drawLine(x01,y01,x1,y1);
-      g.setColor(colorF2);
-      g.drawLine(x02,y02,x2,y2);
-      Color color=(j==0)?Color.orange.darker():(j==1)?Color.red:Color.green.darker();
-      g.setColor(color);
-      g.drawLine(x1-3,y1-3,x1+3,y1+3);
-      g.drawLine(x1-3,y1+3,x1+3,y1-3);
-      g.drawLine(x2-3,y2-3,x2+3,y2+3);
-      g.drawLine(x2-3,y2+3,x2+3,y2-3);
-      g.setStroke(dashedStroke);
-      g.drawLine(x1,y1,x2,y2);
-      x01=x1; y01=y1; x02=x2; y02=y2;
-    }
-    
-    if (f1.pp!=null) {
-      g.setColor(paleColorF1);
-      int x0=x01,y0=y01;
-      for (int i=0; i<f1.pp.length; i++) {
-        int x=metrics.scrX(f1.pp[i].lon), y=metrics.scrY(f1.pp[i].lat);
-        //g.drawLine(x-3,y-3,x+3,y+3);
-        //g.drawLine(x-3,y+3,x+3,y-3);
-        g.setStroke(stroke);
-        g.drawRect(x-3,y-3,6,6);
-        if (f1.pp[i].pointTimeUnix>f1.last.pointTimeUnix) {
-          g.setStroke(dashedStroke);
-          g.drawLine(x0, y0, x, y);
-          x0=x; y0=y;
+      
+      int sx0=(i==0)?x01:x02, sy0=(i==0)?y01:y02;
+      for (int j=0; j<path.size(); j++) {
+        FlightPoint fp=path.get(j);
+        int sx=metrics.scrX(fp.lon), sy=metrics.scrY(fp.lat);
+        if (fp.pointTimeUnix<=f.last.pointTimeUnix)
+          g.setColor((i==0)?colorF1:colorF2);
+        else
+          g.setColor((i==0)?paleColorF1:paleColorF2);
+        Stroke str=(fp.pointTimeUnix<=f.first.pointTimeUnix)?stroke:
+                       (fp.pointTimeUnix<=f.last.pointTimeUnix)?stroke2:dashedStroke;
+        g.setStroke(str);
+        g.drawLine(sx0,sy0,sx,sy);
+        if (fp instanceof ConflictPoint) {
+          Color color=(fp.equals(f.first))?Color.orange.darker():
+                          (fp.equals(f.closest))?Color.red:Color.green.darker();
+          g.setColor(color);
+          g.setStroke(stroke2);
+          g.drawLine(sx-3,sy-3,sx+3,sy+3);
+          g.drawLine(sx-3,sy+3,sx+3,sy-3);
+          if (i==0) {
+            FlightPoint fp2 = (fp.equals(f.first)) ? f2.first :
+                                  (fp.equals(f.closest)) ? f2.closest : f2.last;
+            int x2=metrics.scrX(fp2.lon), y2=metrics.scrY(fp2.lat);
+            g.setStroke(dashedStroke);
+            g.drawLine(sx,sy,x2,y2);
+          }
         }
+        else {
+          g.setStroke(stroke);
+          g.drawRect(sx-3,sy-3,6,6);
+        }
+        sx0=sx; sy0=sy;
+        g.setStroke(stroke);
       }
     }
-    /**/
-    if (f2.pp!=null) {
-      g.setColor(paleColorF2);
-      int x0=x02,y0=y02;
-      for (int i=0; i<f2.pp.length; i++) {
-        int x=metrics.scrX(f2.pp[i].lon), y=metrics.scrY(f2.pp[i].lat);
-        //g.drawLine(x-3,y-3,x+3,y+3);
-        //g.drawLine(x-3,y+3,x+3,y-3);
-        g.setStroke(stroke);
-        g.drawRect(x-3,y-3,6,6);
-        if (f2.pp[i].pointTimeUnix>f2.last.pointTimeUnix) {
-          g.setStroke(dashedStroke);
-          g.drawLine(x0, y0, x, y);
-          x0=x; y0=y;
-        }
-      }
-    }
-    /**/
-    g.setStroke(stroke);
     
     gr.drawImage(off_Image,0,0,null);
     off_Valid=true;

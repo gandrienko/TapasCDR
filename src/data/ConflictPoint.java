@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
  * with another flight.
  */
 
-public class ConflictPoint {
+public class ConflictPoint extends FlightPoint {
   /**
    * Minimal required horizontal (in nm) and vertical (in feet) separation
    */
@@ -40,7 +40,7 @@ public class ConflictPoint {
   /**
    * Unix time of this point; results from adding timeToPoint to the time of conflict detection
    */
-  public long pointTimeUnix=0;
+  //public long pointTimeUnix=0;
   /**
    * Time of the point; results from converting pointTimeUnix to LocalDateTime
    */
@@ -50,12 +50,12 @@ public class ConflictPoint {
    *            "last_conflict_lon","last_conflict_lat","crossing_point_lon","crossing_point_lat",
    * Longitude and latitude of the point, in degrees
    */
-  public double lon=Double.NaN, lat=Double.NaN;
+  //public double lon=Double.NaN, lat=Double.NaN;
   /**
    * conflicts.csv: "conflict_alt","first_conflict_alt","last_conflict_alt",
    * point altitude, in feet
    */
-  public int altitude=0;
+  //public int altitude=0;
   /**
    * conflicts.csv: "h_distance_at_conflict",
    *       "h_distance_at_first_conflict",
