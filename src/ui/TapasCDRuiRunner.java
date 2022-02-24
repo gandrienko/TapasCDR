@@ -68,26 +68,28 @@ public class TapasCDRuiRunner {
       return false;
     if (dataUpdater==null)
       dataUpdater=new DataUpdater();
-    int nPrevPortions=dataUpdater.getDataPortionsCount();
-    if (!dataUpdater.takeNewData(path))
-      return false;
     if (ui==null) {
       ui=new ShowConflicts();
       ui.setDataUpdater(dataUpdater);
       ui.setActionListener(actionListener);
       ui.setChannelName(channelName);
+      ui.makeUI();
     }
-    int nCurrPortions=dataUpdater.getDataPortionsCount();
-    if (!offlineMode)
-      dataUpdater.toLastPortion();
     ui.setOfflineMode(offlineMode);
-    ui.takeDataPortion(-1);
-    if (nPrevPortions<=1 && nCurrPortions>1) {
-      ui.enableDataPortionsSelection();
-      if (offlineMode)
-        ui.makeAutoUpdateControls();
+    int nPrevPortions=dataUpdater.getDataPortionsCount();
+    boolean gotData=dataUpdater.takeNewData(path);
+    if (gotData) {
+      int nCurrPortions = dataUpdater.getDataPortionsCount();
+      if (!offlineMode)
+        dataUpdater.toLastPortion();
+      ui.takeDataPortion(-1);
+      if (nPrevPortions <= 1 && nCurrPortions > 1) {
+        ui.enableDataPortionsSelection();
+        if (offlineMode)
+          ui.makeAutoUpdateControls();
+      }
     }
-    return true;
+    return gotData;
   }
   
   public void emulateDataUpdating() {

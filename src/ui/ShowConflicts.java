@@ -18,7 +18,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 22/02/2022 16:25";
+  public static final String versionText="TAPAS CDR UI version 24/02/2022 12:35";
   public static final int defaultMaxRankShown=3;
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
@@ -85,7 +85,9 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     this.dataUpdater = dataUpdater;
     if (dataUpdater!=null) {
       dataUpdater.addChangeListener(this);
-      updateLabel = new JLabel("Data portion N " + (dataUpdater.lastIdx + 1));
+      String txt=(dataUpdater.getDataPortionsCount()>0)?
+                     "Data portion N " + (dataUpdater.lastIdx + 1):"No conflict data received!";
+      updateLabel = new JLabel(txt);
       updateLabel.setForeground(Color.blue.darker());
       addToControlPanel(updateLabel);
     }
@@ -330,6 +332,148 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     return conflicts;
   }
   
+  public void makeUI() {
+    UIManager.put("ToolTip.background", new Color(255,240,200));
+    ToolTipManager.sharedInstance().setDismissDelay(60000);
+  
+    cTableModel=new ConflictTableModel();
+    cTable = new JTable(cTableModel) {
+      public String getToolTipText(MouseEvent e) {
+        java.awt.Point p = e.getPoint();
+        int colIndex = columnAtPoint(p), rowIndex = rowAtPoint(p);
+        if (colIndex >= 0 && rowIndex>=0) {
+          int realColIndex = convertColumnIndexToModel(colIndex);
+          if (realColIndex >= 0) {
+            int realRowIndex = convertRowIndexToModel(rowIndex);
+            if (realRowIndex>=0) {
+              String text=cTableModel.getDetailedText(realRowIndex,realColIndex);
+              if (text!=null && text.length()>5)
+                return text;
+            }
+          }
+        }
+        return null;
+      }
+    
+    };
+    DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+    centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+    TimeCellRenderer timeRenderer=new TimeCellRenderer();
+    for (int i=0; i<cTableModel.getColumnCount(); i++) {
+      String cName=cTableModel.getColumnName(i).toLowerCase();
+      NumberByBarCellRenderer hDRend=new NumberByBarCellRenderer(0,Conflict.getMaxHorDistance(conflicts)),
+          vDRend=new NumberByBarCellRenderer(0,Conflict.getMaxVertDistance(conflicts));
+      hDRend.setPrecision(2);
+      hDRend.setLowLimit(ConflictPoint.HD_MIN);
+      hDRend.conflictTableModel=cTableModel;
+      vDRend.setPrecision(0);
+      vDRend.setLowLimit(ConflictPoint.VD_MIN);
+      vDRend.setConflictTableModel(cTableModel);
+      if (cName.contains("moc") || cName.contains("compliance")) {
+        NumberByBarCellRenderer bRend= new NumberByBarCellRenderer(0,100);
+        bRend.setPrecision(2);
+        bRend.setLowLimit(100);
+        bRend.setUnit("%");
+        bRend.setConflictTableModel(cTableModel);
+        cTable.getColumnModel().getColumn(i).setCellRenderer(bRend);
+      }
+      else
+        if (cName.contains("severity")) {
+          NumberByBarCellRenderer sRend=new NumberByBarCellRenderer(0,15);
+          sRend.setPrecision(0);
+          sRend.setUpLimit(0);
+          sRend.setConflictTableModel(cTableModel);
+          cTable.getColumnModel().getColumn(i).setCellRenderer(sRend);
+        }
+        else
+          if (cName.contains("rate")) {
+            NumberByBarCellRenderer rend=(cName.startsWith("h"))?
+                                             new NumberByBarCellRenderer(-100,750):
+                                             new NumberByBarCellRenderer(-1000,4000);
+            rend.setPrecision((cName.startsWith("h"))?2:0);
+            rend.setUpLimit(0);
+            rend.setConflictTableModel(cTableModel);
+            cTable.getColumnModel().getColumn(i).setCellRenderer(rend);
+          }
+          else
+            if (cName.startsWith("hor"))
+              cTable.getColumnModel().getColumn(i).setCellRenderer(hDRend);
+            else
+              if (cName.startsWith("vert"))
+                cTable.getColumnModel().getColumn(i).setCellRenderer(vDRend);
+              else
+                if (cTableModel.getColumnClass(i).equals(String.class))
+                  cTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+                else
+                  if (cTableModel.getColumnClass(i).equals(LocalDateTime.class))
+                    cTable.getColumnModel().getColumn(i).setCellRenderer(timeRenderer);
+      int w=cTableModel.getPreferredColumnWidth(i);
+      if (w>0)
+        cTable.getColumnModel().getColumn(i).setPreferredWidth(w);
+    }
+    
+    cTable.addMouseListener(new MouseAdapter() {
+      public void mousePressed(MouseEvent e) {
+        super.mousePressed(e);
+        if (e.getButton()==MouseEvent.BUTTON1) {
+          int rowIndex=cTable.rowAtPoint(e.getPoint());
+          if (rowIndex<0)
+            return;
+          int realRowIndex = cTable.convertRowIndexToModel(rowIndex);
+          if (realRowIndex>=0 && realRowIndex<cTableModel.conflicts.size())
+            showConflictGeometry(cTableModel.conflicts.get(realRowIndex));
+        }
+      }
+    });
+  
+    Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
+  
+    cTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.6f),
+        Math.max(Math.min(Math.round(size.height * 0.6f),cTable.getPreferredSize().height+50),size.height/12)));
+    cTable.setFillsViewportHeight(true);
+    cTable.setAutoCreateRowSorter(true);
+    cTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    cTable.setRowSelectionAllowed(true);
+    cTable.setColumnSelectionAllowed(false);
+    JScrollPane scrollPane = new JScrollPane(cTable);
+    mainFrame = new JFrame(versionText);
+    if (!isSecondary) {
+      mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+      mainFrame.addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowClosing(WindowEvent e) {
+          if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
+              "Sure to exit?",
+              "Sure to exit?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+                  == JOptionPane.YES_OPTION)
+            System.exit(0);
+        }
+      });
+    }
+    else {
+      mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+      mainFrame.addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowClosing(WindowEvent e) {
+          super.windowClosing(e);
+          mainFrame.dispose();
+          if (primary !=null)
+            primary.secondaryClosed();
+        }
+      });
+    }
+    mainFrame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+    if (controlPanel!=null)
+      mainFrame.getContentPane().add(controlPanel,BorderLayout.SOUTH);
+    //Display the window.
+    mainFrame.pack();
+    if (isSecondary)
+      mainFrame.setLocation(size.width-mainFrame.getWidth()-30,100);
+    else
+      mainFrame.setLocation(30, 30);
+    mainFrame.setVisible(true);
+  }
+  
   public void setData(ArrayList<Conflict> conflicts,
                       ArrayList<NCEvent> ncEvents,
                       int portionIdx) {
@@ -343,11 +487,8 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       portionChoice.addItemListener(this);
     }
     
-    if (cTableModel==null)
-      cTableModel=new ConflictTableModel();
     cTableModel.setConflicts(conflicts);
-    if (cTable!=null)
-      cTableModel.fireTableDataChanged();
+    cTableModel.fireTableDataChanged();
     
     if (conflicts==null || conflicts.isEmpty()) {
       if (mapView!=null)
@@ -373,151 +514,8 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
           dt.getDayOfMonth(), dt.getMonthValue(), dt.getYear(), dt.getHour(), dt.getMinute(), dt.getSecond());
     }
     
-    if (mainFrame!=null)
-      mainFrame.setTitle(frameTitle);
+    mainFrame.setTitle(frameTitle);
     
-    if (cTable==null) {
-      UIManager.put("ToolTip.background", new Color(255,240,200));
-      ToolTipManager.sharedInstance().setDismissDelay(60000);
-      
-      cTable = new JTable(cTableModel) {
-        public String getToolTipText(MouseEvent e) {
-          java.awt.Point p = e.getPoint();
-          int colIndex = columnAtPoint(p), rowIndex = rowAtPoint(p);
-          if (colIndex >= 0 && rowIndex>=0) {
-            int realColIndex = convertColumnIndexToModel(colIndex);
-            if (realColIndex >= 0) {
-              int realRowIndex = convertRowIndexToModel(rowIndex);
-              if (realRowIndex>=0) {
-                String text=cTableModel.getDetailedText(realRowIndex,realColIndex);
-                if (text!=null && text.length()>5)
-                  return text;
-              }
-            }
-          }
-          return null;
-        }
-        
-      };
-      DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-      centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-      TimeCellRenderer timeRenderer=new TimeCellRenderer();
-      for (int i=0; i<cTableModel.getColumnCount(); i++) {
-        String cName=cTableModel.getColumnName(i).toLowerCase();
-        NumberByBarCellRenderer hDRend=new NumberByBarCellRenderer(0,Conflict.getMaxHorDistance(conflicts)),
-            vDRend=new NumberByBarCellRenderer(0,Conflict.getMaxVertDistance(conflicts));
-        hDRend.setPrecision(2);
-        hDRend.setLowLimit(ConflictPoint.HD_MIN);
-        hDRend.conflictTableModel=cTableModel;
-        vDRend.setPrecision(0);
-        vDRend.setLowLimit(ConflictPoint.VD_MIN);
-        vDRend.setConflictTableModel(cTableModel);
-        if (cName.contains("moc") || cName.contains("compliance")) {
-          NumberByBarCellRenderer bRend= new NumberByBarCellRenderer(0,100);
-          bRend.setPrecision(2);
-          bRend.setLowLimit(100);
-          bRend.setUnit("%");
-          bRend.setConflictTableModel(cTableModel);
-          cTable.getColumnModel().getColumn(i).setCellRenderer(bRend);
-        }
-        else
-        if (cName.contains("severity")) {
-          NumberByBarCellRenderer sRend=new NumberByBarCellRenderer(0,15);
-          sRend.setPrecision(0);
-          sRend.setUpLimit(0);
-          sRend.setConflictTableModel(cTableModel);
-          cTable.getColumnModel().getColumn(i).setCellRenderer(sRend);
-        }
-        else
-        if (cName.contains("rate")) {
-          NumberByBarCellRenderer rend=(cName.startsWith("h"))?
-                                           new NumberByBarCellRenderer(-100,750):
-                                           new NumberByBarCellRenderer(-1000,4000);
-          rend.setPrecision((cName.startsWith("h"))?2:0);
-          rend.setUpLimit(0);
-          rend.setConflictTableModel(cTableModel);
-          cTable.getColumnModel().getColumn(i).setCellRenderer(rend);
-        }
-        else
-        if (cName.startsWith("hor"))
-          cTable.getColumnModel().getColumn(i).setCellRenderer(hDRend);
-        else
-        if (cName.startsWith("vert"))
-          cTable.getColumnModel().getColumn(i).setCellRenderer(vDRend);
-        else
-        if (cTableModel.getColumnClass(i).equals(String.class))
-          cTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        else
-        if (cTableModel.getColumnClass(i).equals(LocalDateTime.class))
-          cTable.getColumnModel().getColumn(i).setCellRenderer(timeRenderer);
-        int w=cTableModel.getPreferredColumnWidth(i);
-        if (w>0)
-          cTable.getColumnModel().getColumn(i).setPreferredWidth(w);
-      }
-  
-      
-      cTable.addMouseListener(new MouseAdapter() {
-        public void mousePressed(MouseEvent e) {
-          super.mousePressed(e);
-          if (e.getButton()==MouseEvent.BUTTON1) {
-            int rowIndex=cTable.rowAtPoint(e.getPoint());
-            if (rowIndex<0)
-              return;
-            int realRowIndex = cTable.convertRowIndexToModel(rowIndex);
-            if (realRowIndex>=0 && realRowIndex<cTableModel.conflicts.size())
-              showConflictGeometry(cTableModel.conflicts.get(realRowIndex));
-          }
-        }
-      });
-      
-      Dimension size=Toolkit.getDefaultToolkit().getScreenSize();
-  
-      cTable.setPreferredScrollableViewportSize(new Dimension(Math.round(size.width * 0.6f),
-          Math.max(Math.min(Math.round(size.height * 0.6f),cTable.getPreferredSize().height+50),size.height/12)));
-      cTable.setFillsViewportHeight(true);
-      cTable.setAutoCreateRowSorter(true);
-      cTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-      cTable.setRowSelectionAllowed(true);
-      cTable.setColumnSelectionAllowed(false);
-      JScrollPane scrollPane = new JScrollPane(cTable);
-      mainFrame = new JFrame(frameTitle);
-      if (!isSecondary) {
-        mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        mainFrame.addWindowListener(new WindowAdapter() {
-          @Override
-          public void windowClosing(WindowEvent e) {
-            if (JOptionPane.showConfirmDialog(FocusManager.getCurrentManager().getActiveWindow(),
-                "Sure to exit?",
-                "Sure to exit?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
-                    == JOptionPane.YES_OPTION)
-              System.exit(0);
-          }
-        });
-      }
-      else {
-        mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        mainFrame.addWindowListener(new WindowAdapter() {
-          @Override
-          public void windowClosing(WindowEvent e) {
-            super.windowClosing(e);
-            mainFrame.dispose();
-            if (primary !=null)
-              primary.secondaryClosed();
-          }
-        });
-      }
-      mainFrame.getContentPane().add(scrollPane, BorderLayout.CENTER);
-      if (controlPanel!=null)
-        mainFrame.getContentPane().add(controlPanel,BorderLayout.SOUTH);
-      //Display the window.
-      mainFrame.pack();
-      if (isSecondary)
-        mainFrame.setLocation(size.width-mainFrame.getWidth()-30,100);
-      else
-        mainFrame.setLocation(30, 30);
-      mainFrame.setVisible(true);
-    }
-    else
     if (mapView!=null) {
       int cIdx=-1;
       if (mapView.conflict!=null) {
@@ -681,6 +679,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
                   secondary =new ShowConflicts();
                   secondary.setIsSecondary(true);
                   secondary.setPrimary(primary);
+                  secondary.makeUI();
                 }
                 secondary.setData(a.conflicts,null,-1);
               }
