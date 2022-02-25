@@ -209,16 +209,14 @@ public class FlightInConflict {
     if (path!=null)
       return path;
     ConflictPoint cp[]={first,closest,last};
-    int np=0;
+    int np=1;
     for (int i=0; i<cp.length; i++)
       if (cp[i]!=null) {
         ++np;
         cp[i].type=(i==0)?'f':(i==1)?'c':'l';
       }
-    if (np<2)
-      return null;
     if (pp!=null)
-      np+=pp.length+1;
+      np+=pp.length;
     
     path=new ArrayList<FlightPoint>(np);
     if (t0>0)

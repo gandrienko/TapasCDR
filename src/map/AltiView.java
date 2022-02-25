@@ -2,6 +2,7 @@ package map;
 
 import data.Conflict;
 import data.ConflictPoint;
+import data.FlightInConflict;
 import data.FlightPoint;
 
 import javax.swing.*;
@@ -12,6 +13,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 
 /**
  * Draws a graph of the altitudes of 2 aircraft depending on time
@@ -76,36 +78,31 @@ public class AltiView extends JPanel implements MouseMotionListener {
       return;
     }
     minTime=conflict.detectionTimeUnix;
-    double tt3=conflict.flights[0].last.timeTo, ttLast=tt3;
-    for (int i=0; i<conflict.flights.length; i++) {
-      FlightPoint pp[]=conflict.flights[i].pp;
-      if (pp != null && pp[pp.length - 1].pointTimeUnix - conflict.detectionTimeUnix > ttLast)
-        ttLast = pp[pp.length - 1].pointTimeUnix - conflict.detectionTimeUnix;
-    }
-    if (ttLast>tt3*2) ttLast=tt3*2;
-    maxTime=minTime+Math.round(ttLast);
-
+    long tLast=minTime;
+    maxTime=minTime;
     minAlt=Math.min(conflict.flights[0].altitude,conflict.flights[1].altitude);
     maxAlt=Math.max(conflict.flights[0].altitude,conflict.flights[1].altitude);
     for (int i=0; i<conflict.flights.length; i++) {
-      for (int j = 0; j < 3; j++) {
-        ConflictPoint cp = (j == 0) ? conflict.flights[i].first :
-                               (j == 1) ? conflict.flights[i].closest : conflict.flights[i].last;
-        if (minAlt > cp.altitude)
-          minAlt = cp.altitude;
-        else
-          if (maxAlt < cp.altitude)
-            maxAlt = cp.altitude;
-      }
-      FlightPoint pp[]=conflict.flights[i].pp;
-      if (pp!=null)
-        for (int j=0; j<pp.length; j++)
-          if (minAlt > pp[j].altitude)
-            minAlt = pp[j].altitude;
+      if (conflict.flights[i].last!=null && conflict.flights[i].last.pointTimeUnix>tLast)
+        tLast=conflict.flights[i].last.pointTimeUnix;
+      ArrayList<FlightPoint> path=conflict.flights[i].getPath(conflict.detectionTimeUnix);
+      if (path!=null) {
+        FlightPoint fp=path.get(path.size()-1);
+        if (fp.pointTimeUnix>maxTime)
+          maxTime=fp.pointTimeUnix;
+        for (int j=0; j<path.size(); j++) {
+          fp=path.get(j);
+          if (fp.altitude<minAlt)
+            minAlt=fp.altitude;
           else
-            if (maxAlt < pp[j].altitude)
-              maxAlt = pp[j].altitude;
+            if (fp.altitude>maxAlt)
+              maxAlt=fp.altitude;
+        }
+      }
     }
+    if (tLast>minTime && maxTime-tLast>3*(tLast-minTime))
+    maxTime=tLast+3*(tLast-minTime);
+
     redraw();
   }
   
@@ -159,6 +156,10 @@ public class AltiView extends JPanel implements MouseMotionListener {
     if (off_Image == null || off_Image.getWidth() != w || off_Image.getHeight() != h)
       off_Image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
     Graphics2D g = off_Image.createGraphics();
+    RenderingHints rh = new RenderingHints(
+        RenderingHints.KEY_ANTIALIASING,
+        RenderingHints.VALUE_ANTIALIAS_ON);
+    g.setRenderingHints(rh);
   
     g.setColor(getBackground());
     g.fillRect(0, 0, w + 1, h + 1);
@@ -185,9 +186,11 @@ public class AltiView extends JPanel implements MouseMotionListener {
     Stroke origStroke=g.getStroke();
     g.setStroke(dashedStroke);
     g.setColor(Color.orange.darker());
-    g.drawLine(x1,yTop,x1,yBottom);
-    String timeStr=getTimeText(conflict.flights[0].first.time);
-    g.drawString(timeStr,x1-fm.stringWidth(timeStr)/2,yBottom+fm.getHeight());
+    if (x1<x2)
+      g.drawLine(x1, yTop, x1, yBottom);
+    String timeStr = getTimeText(conflict.flights[0].first.time);
+    g.drawString(timeStr, x1 - fm.stringWidth(timeStr) / 2, yBottom + fm.getHeight());
+    
     g.setColor(Color.red);
     g.drawLine(x2,yTop,x2,yBottom);
     timeStr=getTimeText(conflict.flights[0].closest.time);
@@ -195,37 +198,55 @@ public class AltiView extends JPanel implements MouseMotionListener {
     if (tx+sw>w-xMarg)
       tx=w-xMarg-sw;
     g.drawString(timeStr,tx,yMarg+fm.getAscent());
-    g.setColor(Color.green.darker());
-    g.drawLine(x3,yTop,x3,yBottom);
-    timeStr=getTimeText(conflict.flights[0].last.time);
-    sw=fm.stringWidth(timeStr); tx=x3-sw/2;
-    if (tx+sw>w-xMarg)
-      tx=w-xMarg-sw;
-    g.drawString(timeStr,tx,yBottom+fm.getHeight());
+    if (x3>x1) {
+      g.setColor(Color.green.darker());
+      if (x3>x2)
+        g.drawLine(x3, yTop, x3, yBottom);
+      timeStr = getTimeText(conflict.flights[0].last.time);
+      sw = fm.stringWidth(timeStr);
+      tx = x3 - sw / 2;
+      if (tx + sw > w - xMarg)
+        tx = w - xMarg - sw;
+      g.drawString(timeStr, tx, yBottom + fm.getHeight());
+    }
   
     g.setStroke(origStroke);
+    
     if (minAlt==maxAlt) {
-      g.setColor(Color.darkGray);
-      g.setStroke(stroke2);
-      g.drawLine(x0,yTop,xEnd,yTop);
-  
-      int xPrev=x3;
+      int xPrev=x0;
       for (int i=0; i<conflict.flights.length; i++) {
-        FlightPoint pp[]=conflict.flights[i].pp;
-        if (pp != null) {
-          g.setColor((i==0)?paleColorF1:paleColorF2);
-          for (int j = 0; j < pp.length; j++) {
-            int x=timeToXPos(pp[j].pointTimeUnix);
-            g.setStroke(origStroke);
-            g.drawRect(x-3,yTop-3,6,6);
-            if (x>xPrev) {
-              g.setStroke(smallDashStroke);
-              if (xPrev<x3 && x>x3)
-                xPrev=x3;
-              g.drawLine(xPrev,yTop,x,yTop);
-              xPrev=x;
-            }
+        FlightInConflict f=conflict.flights[i];
+        ArrayList<FlightPoint> path=f.getPath(conflict.detectionTimeUnix);
+        if (path==null)
+          continue;
+        for (int j=0; j<path.size(); j++) {
+          FlightPoint fp=path.get(j);
+          int x=timeToXPos(fp.pointTimeUnix);
+          if (fp.pointTimeUnix<=f.last.pointTimeUnix)
+            g.setColor((i==0)?colorF1:colorF2);
+          else
+            g.setColor((i==0)?paleColorF1:paleColorF2);
+          if (j>0) {
+            Stroke str=(fp.pointTimeUnix<=f.first.pointTimeUnix)?origStroke:
+                           (fp.pointTimeUnix<=f.last.pointTimeUnix)?stroke2:dashedStroke;
+            g.setStroke(str);
+            g.drawLine(xPrev, yTop, x, yTop);
           }
+          if (fp instanceof ConflictPoint) {
+            Color color=(fp.equals(f.first))?Color.orange.darker():
+                            (fp.equals(f.closest))?Color.red:Color.green.darker();
+            g.setColor(color);
+            g.setStroke(stroke2);
+            g.drawLine(x-3,yTop-3,x+3,yTop+3);
+            g.drawLine(x-3,yTop+3,x+3,yTop-3);
+          }
+          else {
+            g.setStroke(origStroke);
+            g.drawRect(x - 3, yTop - 3, 6, 6);
+            if (j==0)
+              g.fillRect(x - 3, yTop - 3, 6, 6);
+          }
+          xPrev=x;
         }
       }
     }
@@ -236,45 +257,56 @@ public class AltiView extends JPanel implements MouseMotionListener {
       g.drawLine(x0-3,yMin,x0+3,yMin);
       altStr=String.format("%d",minAlt);
       g.drawString(altStr,xMarg,yMin);
-      int y11=yMin-Math.round((1.0f*conflict.flights[0].altitude-minAlt)/altDiff*yDiff),
-          y21=yMin-Math.round((1.0f*conflict.flights[1].altitude-minAlt)/altDiff*yDiff);
-      g.setStroke(stroke2);
-      int xx1=x0;
-      for (int i=0; i<3; i++) {
-        ConflictPoint cp1 = (i==0)?conflict.flights[0].first:(i==1)?conflict.flights[0].closest:conflict.flights[0].last,
-            cp2 = (i==0)?conflict.flights[1].first:(i==1)?conflict.flights[1].closest:conflict.flights[1].last;
-        int y12=yMin-Math.round((1.0f*cp1.altitude-minAlt)/altDiff*yDiff),
-            y22=yMin-Math.round((1.0f*cp2.altitude-minAlt)/altDiff*yDiff);
-        int xx2=(i==0)?x1:(i==1)?x2:x3;
-        g.setColor(colorF1);
-        g.drawLine(xx1,y11,xx2,y12);
-        g.setColor(colorF2);
-        g.drawLine(xx1,y21,xx2,y22);
-        if (y12!=y22 && (y12!=y11 || y22!=y21)) {
-          altStr=String.format("%d",Math.abs(cp1.altitude-cp2.altitude));
-          g.setColor((i==0)?Color.orange.darker():(i==1)?Color.red:Color.green.darker());
-          g.drawString(altStr,xx2-fm.stringWidth(altStr),Math.max(y12,y22)+fm.getAscent()+5);
-        }
-        xx1=xx2;
-        y11=y12; y21=y22;
-      }
-  
+      int xPrev=x0, yPrev=-1;
       for (int i=0; i<conflict.flights.length; i++) {
-        FlightPoint pp[]=conflict.flights[i].pp;
-        if (pp != null) {
-          g.setColor((i==0)?paleColorF1:paleColorF2);
-          int xPrev=xx1, yPrev=(i==0)?y11:y21;;
-          for (int j = 0; j < pp.length; j++) {
-            int x=timeToXPos(pp[j].pointTimeUnix);
-            int y=yMin-Math.round((1.0f*pp[j].altitude-minAlt)/altDiff*yDiff);
+        FlightInConflict f=conflict.flights[i];
+        ArrayList<FlightPoint> path=f.getPath(conflict.detectionTimeUnix);
+        if (path==null)
+          continue;
+        for (int j=0; j<path.size(); j++) {
+          FlightPoint fp=path.get(j);
+          int x=timeToXPos(fp.pointTimeUnix);
+          int y=yMin-Math.round((1.0f*fp.altitude-minAlt)/altDiff*yDiff);
+          if (fp.pointTimeUnix<=f.last.pointTimeUnix)
+            g.setColor((i==0)?colorF1:colorF2);
+          else
+            g.setColor((i==0)?paleColorF1:paleColorF2);
+          if (j>0) {
+            Stroke str=(fp.pointTimeUnix<=f.first.pointTimeUnix)?origStroke:
+                           (fp.pointTimeUnix<=f.last.pointTimeUnix)?stroke2:dashedStroke;
+            g.setStroke(str);
+            g.drawLine(xPrev, yPrev, x, y);
             g.setStroke(origStroke);
-            g.drawRect(x-3,y-3,6,6);
-            if (x>xPrev) {
-              g.setStroke(smallDashStroke);
-              g.drawLine(xPrev,yPrev,x,y);
-              xPrev=x; yPrev=y;
+          }
+          if (fp instanceof ConflictPoint) {
+            Color color=(fp.equals(f.first))?Color.orange.darker():
+                            (fp.equals(f.closest))?Color.red:Color.green.darker();
+            g.setColor(color);
+            g.setStroke(stroke2);
+            g.drawLine(x-3,y-3,x+3,y+3);
+            g.drawLine(x-3,y+3,x+3,y-3);
+            if (i==0) {
+              FlightInConflict f2=conflict.flights[i+1];
+              FlightPoint fp2 = (fp.equals(f.first)) ? f2.first :
+                                    (fp.equals(f.closest)) ? f2.closest : f2.last;
+              if (fp2.altitude!=fp.altitude) {
+                g.setStroke(smallDashStroke);
+                g.setColor((i==0)?Color.orange.darker():(i==1)?Color.red:Color.green.darker());
+                int y2=yMin-Math.round((1.0f*fp2.altitude-minAlt)/altDiff*yDiff);
+                g.drawLine(x,y,x,y2);
+                altStr=String.format("%d",Math.abs(fp.altitude-fp2.altitude));
+                g.drawString(altStr,x-fm.stringWidth(altStr),Math.max(y,y2)+fm.getAscent()+5);
+              }
             }
           }
+          else {
+            g.setStroke(origStroke);
+            g.drawRect(x - 3, y - 3, 6, 6);
+            if (j==0)
+              g.fillRect(x - 3, y - 3, 6, 6);
+          }
+          
+          xPrev=x; yPrev=y;
         }
       }
     }
