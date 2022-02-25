@@ -124,36 +124,26 @@ public class MapView extends JPanel
     Stroke stroke=g.getStroke();
     FontMetrics fm=g.getFontMetrics();
   
-    FlightInConflict f1=conflict.flights[0], f2=conflict.flights[1];
-    int x01=metrics.scrX(f1.lon), y01=metrics.scrY(f1.lat),
-        x02=metrics.scrX(f2.lon), y02=metrics.scrY(f2.lat);
-    g.setColor(colorF1);
-    g.fillRect(x01-2,y01-2,5,5);
-    g.setColor(colorF2);
-    g.fillRect(x02-2,y02-2,5,5);
-    
-    int sw1=fm.stringWidth(f1.flightId), sw2=fm.stringWidth(f2.flightId);
-    int tx1=x01-sw1/2, ty1=y01-3;
-    if (tx1<1) tx1=1; else if (tx1+sw1>=w) tx1=w-sw1-1;
-    if (ty1-fm.getAscent()<1) ty1=1+fm.getAscent(); else if (ty1>=h) ty1=h;
-    int tx2=x02-sw2/2, ty2=y02-3;
-    if (tx2<1) tx2=1; else if (tx2+sw2>=w) tx2=w-sw2-1;
-    if (ty2-fm.getAscent()<1) ty2=1+fm.getAscent(); else if (ty2>=h) ty2=h-1;
-    g.setColor(textColorF1);
-    g.drawString(f1.flightId,tx1,ty1);
-    g.setColor(textColorF2);
-    g.drawString(f2.flightId,tx2,ty2);
-  
-  
     for (int i=0; i<2; i++) {
       FlightInConflict f=conflict.flights[i];
-      ArrayList<FlightPoint> path=f.getPath();
+      ArrayList<FlightPoint> path=f.getPath(conflict.detectionTimeUnix);
+
+      FlightPoint fp=(path==null)?f.getDetectionPoint(conflict.detectionTimeUnix):path.get(0);
+      int sx0=metrics.scrX(fp.lon), sy0=metrics.scrY(fp.lat);
+      g.setColor((i==0)?colorF1:colorF2);
+      g.fillRect(sx0-2,sy0-2,5,5);
+      int sw=fm.stringWidth(f.flightId);
+      int tx=sx0-sw/2, ty=sy0-3;
+      if (tx<1) tx=1; else if (tx+sw>=w) tx=w-sw-1;
+      if (ty-fm.getAscent()<1) ty=1+fm.getAscent(); else if (ty>=h) ty=h;
+      g.setColor((i==0)?textColorF1:textColorF2);
+      g.drawString(f.flightId,tx,ty);
+  
       if (path==null)
         continue;
-      
-      int sx0=(i==0)?x01:x02, sy0=(i==0)?y01:y02;
-      for (int j=0; j<path.size(); j++) {
-        FlightPoint fp=path.get(j);
+
+      for (int j=1; j<path.size(); j++) {
+        fp=path.get(j);
         int sx=metrics.scrX(fp.lon), sy=metrics.scrY(fp.lat);
         if (fp.pointTimeUnix<=f.last.pointTimeUnix)
           g.setColor((i==0)?colorF1:colorF2);
@@ -171,6 +161,7 @@ public class MapView extends JPanel
           g.drawLine(sx-3,sy-3,sx+3,sy+3);
           g.drawLine(sx-3,sy+3,sx+3,sy-3);
           if (i==0) {
+            FlightInConflict f2=conflict.flights[i+1];
             FlightPoint fp2 = (fp.equals(f.first)) ? f2.first :
                                   (fp.equals(f.closest)) ? f2.closest : f2.last;
             int x2=metrics.scrX(fp2.lon), y2=metrics.scrY(fp2.lat);
@@ -297,56 +288,29 @@ public class MapView extends JPanel
       
       for (int i=0; i<2; i++) {
         FlightInConflict f=conflict.flights[i];
-        long t0=conflict.detectionTimeUnix;
-        double lon0=f.lon, lat0=f.lat, alt0=f.altitude;
+        ArrayList<FlightPoint> path=f.getPath(conflict.detectionTimeUnix);
+        if (path==null || path.isEmpty())
+          continue;;
         Point p=null;
-        for (int j=0; j<3 && p==null; j++) {
-          if (tTrans.timeUnix==t0) {
-            p = new Point(metrics.scrX(lon0), metrics.scrY(lat0));
-            lon[i]=lon0; lat[i]=lat0; alt[i]=alt0;
+        FlightPoint fp0=path.get(0);
+        for (int j=1; j<path.size() && p==null; j++) {
+          if (tTrans.timeUnix==fp0.pointTimeUnix) {
+            p = new Point(metrics.scrX(fp0.lon), metrics.scrY(fp0.lat));
+            lon[i]=fp0.lon; lat[i]=fp0.lat; alt[i]=fp0.altitude;
           }
           else {
-            ConflictPoint cp=(j==0)?f.first:(j==1)?f.closest:f.last;
-            if (cp==null)
-              continue;
-            if (cp.pointTimeUnix>t0 && tTrans.timeUnix<cp.pointTimeUnix) {
-              double ratio=1.0*(tTrans.timeUnix-t0)/(cp.pointTimeUnix-t0);
-              lon[i]=lon0+(cp.lon-lon0)*ratio;
-              lat[i]=lat0+(cp.lat-lat0)*ratio;
-              alt[i]=alt0+(cp.altitude-alt0)*ratio;
+            FlightPoint fp=path.get(j);
+            if (tTrans.timeUnix<fp.pointTimeUnix) {
+              double ratio=1.0*(tTrans.timeUnix-fp0.pointTimeUnix)/(fp.pointTimeUnix-fp0.pointTimeUnix);
+              lon[i]=fp0.lon+(fp.lon-fp0.lon)*ratio;
+              lat[i]=fp0.lat+(fp.lat-fp0.lat)*ratio;
+              alt[i]=fp0.altitude+(fp.altitude-fp0.altitude)*ratio;
               p=new Point(metrics.scrX(lon[i]),metrics.scrY(lat[i]));
             }
-            else {
-              t0=cp.pointTimeUnix;
-              lon0=cp.lon;
-              lat0=cp.lat;
-              alt0=cp.altitude;
-            }
+            else
+              fp0=fp;
           }
         }
-        if (p==null && f.pp!=null)
-          for (int j=0; j<f.pp.length && p==null; j++) {
-            if (tTrans.timeUnix==t0) {
-              p = new Point(metrics.scrX(lon0), metrics.scrY(lat0));
-              lon[i]=lon0; lat[i]=lat0; alt[i]=alt0;
-            }
-            else {
-              FlightPoint cp = f.pp[j];
-              if (cp.pointTimeUnix > t0 && tTrans.timeUnix < cp.pointTimeUnix) {
-                double ratio = 1.0 * (tTrans.timeUnix - t0) / (cp.pointTimeUnix - t0);
-                lon[i]=lon0+(cp.lon-lon0)*ratio;
-                lat[i]=lat0+(cp.lat-lat0)*ratio;
-                alt[i]=alt0+(cp.altitude-alt0)*ratio;
-                p=new Point(metrics.scrX(lon[i]),metrics.scrY(lat[i]));
-              }
-              else {
-                t0 = cp.pointTimeUnix;
-                lon0 = cp.lon;
-                lat0 = cp.lat;
-                alt0=cp.altitude;
-              }
-            }
-          }
         if (p==null)
           break;
         else

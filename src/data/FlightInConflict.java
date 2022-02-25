@@ -187,20 +187,43 @@ public class FlightInConflict {
   }
   
   /**
+   * @param t0 - the time of conflict detection (Unix seconds)
+   */
+  public FlightPoint getDetectionPoint(long t0){
+    if (t0<=0)
+      return null;
+    FlightPoint dp = new FlightPoint(); //point of conflict detection
+    dp.type = 'd';
+    dp.pointTimeUnix = t0;
+    dp.lon = lon;
+    dp.lat = lat;
+    dp.altitude = altitude;
+    return dp;
+  }
+  
+  /**
+   * @param t0 - the time of conflict detection (Unix seconds)
    * Returns a chronological sequence of conflict points and projection points
    */
-  public ArrayList<FlightPoint> getPath() {
+  public ArrayList<FlightPoint> getPath(long t0) {
     if (path!=null)
       return path;
     ConflictPoint cp[]={first,closest,last};
     int np=0;
     for (int i=0; i<cp.length; i++)
-      if (cp[i]!=null) ++np;
+      if (cp[i]!=null) {
+        ++np;
+        cp[i].type=(i==0)?'f':(i==1)?'c':'l';
+      }
     if (np<2)
       return null;
     if (pp!=null)
-      np+=pp.length;
+      np+=pp.length+1;
+    
     path=new ArrayList<FlightPoint>(np);
+    if (t0>0)
+      path.add(getDetectionPoint(t0));
+    
     for (int i=0; i<cp.length; i++)
       if (cp[i]!=null)
         path.add(cp[i]);
