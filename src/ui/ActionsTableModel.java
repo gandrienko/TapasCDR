@@ -311,8 +311,11 @@ public class ActionsTableModel extends AbstractTableModel {
       txt+=":"+a.actionValue;
     String meaning=Action.getMeaningOfActionType(a.actionType);
     txt+=" ("+meaning;
-    if (a.actionValue!=0)
-      txt+=((meaning.contains("change"))?" by ":" ")+a.actionValue;
+    if (a.actionType.equals("A3") && a.extraInfo!=null)
+      txt+=String.format(" N %d \"%s\"",Math.round(a.actionValue),a.extraInfo);
+    else
+      if (a.actionValue!=0)
+        txt+=((meaning.contains("change"))?" by ":" ")+a.actionValue;
     txt+=") to flight "+a.flightId;
     return txt;
   }
