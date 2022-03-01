@@ -307,15 +307,23 @@ public class ActionsTableModel extends AbstractTableModel {
   
   public String getActionDescription(Action a) {
     String txt="Apply action "+a.actionType;
+    String sValue=null;
     if (a.actionValue!=0)
-      txt+=":"+a.actionValue;
+      if (a.actionType.equals("A2")) {
+        double v = FlightInConflict.transformKnotsToMachNumber(a.actionValue);
+        sValue=String.format("%.4f",v);
+      }
+      else
+        sValue=String.format("%d",Math.round(a.actionValue));
+    if (sValue!=null)
+      txt+=":"+sValue;
     String meaning=Action.getMeaningOfActionType(a.actionType);
     txt+=" ("+meaning;
     if (a.actionType.equals("A3") && a.extraInfo!=null)
-      txt+=String.format(" N %d \"%s\"",Math.round(a.actionValue),a.extraInfo);
+      txt+=String.format(" N %s \"%s\"",sValue,a.extraInfo);
     else
       if (a.actionValue!=0)
-        txt+=((meaning.contains("change"))?" by ":" ")+a.actionValue;
+        txt+=((meaning.contains("change"))?" by ":" ")+sValue;
     txt+=") to flight "+a.flightId;
     return txt;
   }
