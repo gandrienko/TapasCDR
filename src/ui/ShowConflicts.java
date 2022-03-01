@@ -18,7 +18,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 25/02/2022 16:35";
+  public static final String versionText="TAPAS CDR UI version 01/03/2022 18:25";
   public static final int defaultMaxRankShown=3;
   /**
    * For testing: data divided into portions; one portion is shown at each time moment

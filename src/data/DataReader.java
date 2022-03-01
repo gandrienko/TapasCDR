@@ -255,7 +255,13 @@ public class DataReader {
         String colName=data.columns[c], sValue=data.getValue(r,c);
         if (sValue==null || sValue.equalsIgnoreCase("null"))
           continue;
-        if (colName.equalsIgnoreCase("ResolutionID")) a.actionId=sValue; else
+        if (colName.equalsIgnoreCase("ResolutionID")) {
+          a.actionId=sValue;
+          int idx=sValue.lastIndexOf('_');
+          if (idx>0)
+            a.extraInfo=sValue.substring(idx+1);
+        }
+        else
         if (colName.equalsIgnoreCase("ConflictID")) a.conflictId=sValue; else
         if (colName.equalsIgnoreCase("RTkey")) a.rtKey=sValue; else
         if (colName.equalsIgnoreCase("ResolutionActionType")) a.actionType=sValue; else

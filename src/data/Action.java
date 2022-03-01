@@ -9,6 +9,24 @@ public class Action {
       "no action","course change","continue action","resume to flight plan"};
   /**
    * resolution_actions_episode_1.csv: ResolutionID
+   * This ID has the following form:
+   *
+   * TimePoint_FlightID_X_Y_Z where FlightID is a conflicting flight (and is equal to the RTKey),
+   * X is the ResolutionActionType (e.g. A1), Y is the ResolutionAction value (e.g. 1) and
+   * Z is the Duration of the resolution action.
+   *
+   * In some special cases this ID will be in the form: TimePoint_FlightID_no_resolution
+   * These cases are:
+   * -	 when a flight is executing an action and before the end of this action
+   *     another conflict is detected. In this case, the field ‘ActionInProgress’ will report
+   *     the ‘resolutionID’ of the action being performed.
+   * -	 when the phase of a flight is ‘climbing’ or ‘descending’. In this case, the field
+   *     ‘ActionRank’ for all resolution actions will be filled with a value of 100, indicating
+   *     that they are not preferable, except for action RFP which is the one performed in this case.
+   *
+   * In another special case, which is when the ResolutionActionType is A3, the ID will be in the form:
+   * TimePoint_FlightID_X_Y_Z _W
+   * where W is the name of the corresponding waypoint.
    */
   public String actionId=null;
   /**
@@ -41,6 +59,11 @@ public class Action {
    * CA, RFP: null
    */
   public int actionValue=0;
+  /**
+   * Additional information, such as the waypoint name for action A3.
+   * Such information can be provided as a part of the ResolutionID
+   */
+  public String extraInfo=null;
   /**
    * resolution_actions_episode_1.csv: VSpeedChange
    * (transformed to feet per minute during data loading)

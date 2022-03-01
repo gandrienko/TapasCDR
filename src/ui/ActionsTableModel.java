@@ -142,7 +142,7 @@ public class ActionsTableModel extends AbstractTableModel {
             cName.equals("added seconds") ||
             cName.equals("duration") || cName.contains("conflicts"))
       return Integer.class;
-    if (cName.equals("value") || cName.startsWith("h-") || cName.startsWith("v-") ||
+    if (cName.startsWith("h-") || cName.startsWith("v-") ||
             cName.startsWith("course") || cName.equals("bearing") ||
             cName.equals("added miles"))
       return Double.class;
@@ -189,9 +189,14 @@ public class ActionsTableModel extends AbstractTableModel {
     if (cName.equals("action"))
       return a.actionType+": "+Action.getMeaningOfActionType(a.actionType);
     if (cName.equals("value")) {
-      if (a.actionValue!=0 && a.actionType.equals("A2"))
-        return FlightInConflict.transformKnotsToMachNumber(a.actionValue);
-      return a.actionValue;
+      double v=a.actionValue;
+      if (v!=0 && a.actionType.equals("A2")) {
+        v = FlightInConflict.transformKnotsToMachNumber(a.actionValue);
+        return  String.format("%.4f",v);
+      }
+      if (a.actionType.equals("A3") && a.extraInfo!=null)
+        return String.format("%s (N %d)",a.extraInfo,Math.round(v));
+      return String.format("%d",Math.round(v));
     }
     if (cName.equals("rank"))
       return a.rank;
@@ -229,6 +234,9 @@ public class ActionsTableModel extends AbstractTableModel {
     else
     if (colNames[col].equals("Do?"))
       label.setText("___Do___");
+    else
+    if (colNames[col].equals("Value"))
+      label.setText("AAAAA AAAAA");
     else
     if (colNames[col].equals("Action")) {
       String s=Action.type_meanings[0];
@@ -268,7 +276,7 @@ public class ActionsTableModel extends AbstractTableModel {
         txt+=" Mach";
       else
       if (a.actionType.equals("A3"))
-        txt+=" (waypoint number)";
+        txt="waypoint "+txt;
       else
       if (a.actionType.equals("S2"))
         txt+=" degrees";
