@@ -89,6 +89,10 @@ public class TapasCDRuiRunner {
           ui.makeAutoUpdateControls();
       }
     }
+    else {
+      if (ui!=null)
+        ui.showConflictAbsence();
+    }
     return gotData;
   }
   

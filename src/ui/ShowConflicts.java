@@ -18,7 +18,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 public class ShowConflicts implements ItemListener, ChangeListener, ActionListener {
-  public static final String versionText="TAPAS CDR UI version 01/03/2022 18:45";
+  public static final String versionText="TAPAS CDR UI version 07/03/2022 16:45";
   public static final int defaultMaxRankShown=3;
   /**
    * For testing: data divided into portions; one portion is shown at each time moment
@@ -208,6 +208,10 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
       if (bPrevious != null)
         bPrevious.setEnabled(pIdx > 0);
     }
+  }
+  
+  public void showConflictAbsence() {
+    setData(null,null,-1);
   }
   
   public void itemStateChanged(ItemEvent e){
@@ -481,7 +485,7 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
     this.ncEvents=ncEvents;
     toAllowActionChoice=dataUpdater!=null && portionIdx==dataUpdater.getLastPortionIdx();
     
-    if (portionChoice!=null) {
+    if (portionChoice!=null && portionIdx>=0) {
       portionChoice.removeItemListener(this);
       portionChoice.setSelectedIndex(portionIdx);
       portionChoice.addItemListener(this);
@@ -504,6 +508,11 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
         oneConflictTitle.setText("The earlier shown information expired!");
         oneConflictTitle.repaint();
       }
+      if (updateLabel!=null) {
+        updateLabel.setText("No detected conflicts at the moment!");
+        updateLabel.invalidate();
+        updateLabel.validate();
+      }
     }
     
     String frameTitle=versionText;
@@ -513,12 +522,14 @@ public class ShowConflicts implements ItemListener, ChangeListener, ActionListen
           versionText,
           dt.getDayOfMonth(), dt.getMonthValue(), dt.getYear(), dt.getHour(), dt.getMinute(), dt.getSecond());
     }
+    else
+      frameTitle+="; no detected conflicts at the moment";
     
     mainFrame.setTitle(frameTitle);
     
     if (mapView!=null) {
       int cIdx=-1;
-      if (mapView.conflict!=null) {
+      if (mapView.conflict!=null && conflicts!=null) {
         //check if the current set of conflicts contains data about a conflict between the same flights
         //as currently shown in the map view
         Conflict c = mapView.conflict;
