@@ -118,9 +118,12 @@ public class NumberByBarCellRenderer extends JLabel implements TableCellRenderer
         setText(value.toString()+unit);
       else
         setText(String.format("%."+precision+"f%s",value,unit));
-      if (!Double.isNaN(lowLimit) || !Double.isNaN(upLimit))
-        toShowDistanceToLimit =(conflictTableModel==null)?true:
-                                   conflictTableModel.isDistanceToLimitImportant(row,column);
+      if (!Double.isNaN(lowLimit) || !Double.isNaN(upLimit)) {
+        row=table.convertRowIndexToModel(row);
+        column=table.convertColumnIndexToModel(column);
+        toShowDistanceToLimit = (conflictTableModel == null) ? true :
+                                    conflictTableModel.isDistanceToLimitImportant(row, column);
+      }
     }
     if (isSelected)
       setBackground(table.getSelectionBackground());
